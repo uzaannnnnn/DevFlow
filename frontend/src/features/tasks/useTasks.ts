@@ -68,18 +68,64 @@ export function useUpdateTaskMutation(projectId: string) {
   return useMutation<
     { task: Task },
     ApiClientError,
-    { taskId: string; input: UpdateTaskInput }
+    { taskId: string; input: UpdateTaskInput },
+    { previousTasksData?: { tasks: Task[]; total: number } }
   >({
     mutationFn: async ({ taskId, input }) => {
       const res = await taskApi.updateTask(taskId, input);
       return res.data;
     },
-    onSuccess: (data) => {
-      queryClient.setQueryData(taskKeys.detail(data.task.id), {
-        task: data.task,
+    onMutate: async ({ taskId, input }) => {
+      await queryClient.cancelQueries({
+        queryKey: ['projects', projectId, 'tasks'],
       });
+
+      const previousTasksData = queryClient.getQueryData<{
+        tasks: Task[];
+        total: number;
+      }>(taskKeys.projectTasks(projectId));
+
+      // Optimistically update task in all queries for this project
+      queryClient.setQueriesData<{ tasks: Task[]; total: number }>(
+        { queryKey: ['projects', projectId, 'tasks'] },
+        (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            tasks: old.tasks.map((t) =>
+              t.id === taskId
+                ? {
+                    ...t,
+                    ...input,
+                    updated_at: new Date().toISOString(),
+                  }
+                : t
+            ),
+          };
+        }
+      );
+
+      return { previousTasksData };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousTasksData) {
+        queryClient.setQueriesData(
+          { queryKey: ['projects', projectId, 'tasks'] },
+          context.previousTasksData
+        );
+      }
+    },
+    onSettled: (data, _err, variables) => {
+      if (data?.task) {
+        queryClient.setQueryData(taskKeys.detail(data.task.id), {
+          task: data.task,
+        });
+      }
       queryClient.invalidateQueries({
         queryKey: ['projects', projectId, 'tasks'],
+      });
+      queryClient.invalidateQueries({
+        queryKey: taskKeys.detail(variables.taskId),
       });
     },
   });

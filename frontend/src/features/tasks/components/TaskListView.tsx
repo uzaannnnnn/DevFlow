@@ -13,6 +13,7 @@ import { CreateTaskModal } from './CreateTaskModal';
 import { TaskDetailModal } from './TaskDetailModal';
 import { EditTaskModal } from './EditTaskModal';
 import { DeleteTaskModal } from './DeleteTaskModal';
+import { KanbanBoard } from './KanbanBoard';
 import { LoadingSpinner } from '../../../shared/ui/LoadingSpinner';
 import {
   Plus,
@@ -24,6 +25,8 @@ import {
   AlertCircle,
   Edit2,
   Trash2,
+  LayoutGrid,
+  List as ListIcon,
 } from 'lucide-react';
 
 export interface TaskListViewProps {
@@ -31,6 +34,7 @@ export interface TaskListViewProps {
 }
 
 export const TaskListView: React.FC<TaskListViewProps> = ({ project }) => {
+  const [viewMode, setViewMode] = useState<'list' | 'board'>('list');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<TaskStatus | 'all'>('all');
   const [priorityFilter, setPriorityFilter] = useState<TaskPriority | 'all'>('all');
@@ -154,48 +158,91 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ project }) => {
           )}
         </div>
 
-        {/* Create Task Button */}
-        <button
-          type="button"
-          onClick={() => setIsCreateOpen(true)}
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-500 transition-colors shadow-lg shadow-indigo-600/20 whitespace-nowrap self-start sm:self-auto"
-          data-testid="open-create-task-modal-button"
-        >
-          <Plus className="w-4 h-4" />
-          <span>New Task</span>
-        </button>
-      </div>
-
-      {/* Error Alert */}
-      {error && (
-        <div
-          role="alert"
-          className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm flex items-center justify-between"
-        >
-          <div className="flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
-            <span>Failed to load tasks: {error.message}</span>
+        {/* Actions: View Mode Switcher and Create Task */}
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          {/* View Toggle */}
+          <div className="flex items-center rounded-lg bg-slate-900 border border-slate-800 p-0.5">
+            <button
+              type="button"
+              onClick={() => setViewMode('board')}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                viewMode === 'board'
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+              data-testid="view-mode-board-button"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>Board</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('list')}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                viewMode === 'list'
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+              data-testid="view-mode-list-button"
+            >
+              <ListIcon className="w-3.5 h-3.5" />
+              <span>List</span>
+            </button>
           </div>
+
+          {/* Create Task Button */}
           <button
             type="button"
-            onClick={() => refetch()}
-            className="text-xs underline hover:text-rose-300"
+            onClick={() => setIsCreateOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-500 transition-colors shadow-lg shadow-indigo-600/20 whitespace-nowrap"
+            data-testid="open-create-task-modal-button"
           >
-            Retry
+            <Plus className="w-4 h-4" />
+            <span>New Task</span>
           </button>
         </div>
-      )}
+      </div>
 
-      {/* Loading state */}
-      {isLoading && (
-        <div className="py-16 flex flex-col items-center justify-center gap-3 text-slate-400">
-          <LoadingSpinner size="md" />
-          <span className="text-sm">Loading tasks...</span>
-        </div>
-      )}
+      {/* Main View Area: Kanban Board vs Table List */}
+      {viewMode === 'board' ? (
+        <KanbanBoard
+          project={project}
+          searchQuery={search}
+          priorityFilter={priorityFilter}
+          assigneeFilter={assigneeFilter}
+        />
+      ) : (
+        <>
+          {/* Error Alert */}
+          {error && (
+            <div
+              role="alert"
+              className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm flex items-center justify-between"
+            >
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                <span>Failed to load tasks: {error.message}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => refetch()}
+                className="text-xs underline hover:text-rose-300"
+              >
+                Retry
+              </button>
+            </div>
+          )}
 
-      {/* Task List / Table */}
-      {!isLoading && !error && tasks.length > 0 && (
+          {/* Loading state */}
+          {isLoading && (
+            <div className="py-16 flex flex-col items-center justify-center gap-3 text-slate-400">
+              <LoadingSpinner size="md" />
+              <span className="text-sm">Loading tasks...</span>
+            </div>
+          )}
+
+          {/* Task List / Table */}
+          {!isLoading && !error && tasks.length > 0 && (
         <div className="rounded-xl border border-slate-800 bg-slate-950/40 overflow-hidden">
           <div className="divide-y divide-slate-800/80">
             {tasks.map((task) => (
@@ -367,6 +414,8 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ project }) => {
             <span>Create First Task</span>
           </button>
         </div>
+      )}
+      </>
       )}
 
       {/* Modals */}

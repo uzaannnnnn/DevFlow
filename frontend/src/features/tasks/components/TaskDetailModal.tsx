@@ -113,7 +113,11 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 {task.identifier}
               </span>
             )}
-            <h2 id="task-detail-title" className="text-base font-semibold text-white truncate max-w-md">
+            <h2
+              id="task-detail-title"
+              data-testid="detail-task-title"
+              className="text-base font-semibold text-white truncate max-w-md"
+            >
               {isLoading ? 'Loading task details...' : task?.title}
             </h2>
           </div>

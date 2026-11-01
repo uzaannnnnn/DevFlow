@@ -12,15 +12,19 @@ import { X, CheckSquare } from 'lucide-react';
 export interface CreateTaskModalProps {
   isOpen: boolean;
   projectId: string;
+  initialStatus?: TaskStatus;
   onClose: () => void;
   onCreated?: (task: Task) => void;
+  onSuccess?: () => void;
 }
 
 export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
   isOpen,
   projectId,
+  initialStatus,
   onClose,
   onCreated,
+  onSuccess,
 }) => {
   const [serverError, setServerError] = useState<string | null>(null);
   const createMutation = useCreateTaskMutation(projectId);
@@ -36,7 +40,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
     defaultValues: {
       title: '',
       description: '',
-      status: 'todo',
+      status: initialStatus || 'todo',
       priority: 'medium',
       assignee_id: '',
       due_date: '',
@@ -74,6 +78,9 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
       reset();
       if (onCreated) {
         onCreated(res.task);
+      }
+      if (onSuccess) {
+        onSuccess();
       }
       onClose();
     } catch (err) {

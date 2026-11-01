@@ -184,4 +184,27 @@ describe('TaskListView Component', () => {
       expect(screen.getByTestId('empty-create-task-button')).toBeInTheDocument();
     });
   });
+
+  it('toggles between list view and board view', async () => {
+    renderWithQueryClient(<TaskListView project={mockProject} />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('task-row-task-1')).toBeInTheDocument();
+    });
+
+    const boardBtn = screen.getByTestId('view-mode-board-button');
+    fireEvent.click(boardBtn);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('kanban-board-container')).toBeInTheDocument();
+      expect(screen.getByTestId('kanban-column-todo')).toBeInTheDocument();
+    });
+
+    const listBtn = screen.getByTestId('view-mode-list-button');
+    fireEvent.click(listBtn);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('task-row-task-1')).toBeInTheDocument();
+    });
+  });
 });
