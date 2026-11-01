@@ -115,21 +115,30 @@ cd backend
 # Download dependencies
 go mod download
 
-# Run unit and integration tests
+# Run database migrations (applies 10 MVP core tables)
+go run ./cmd/migrate up
+
+# Run unit and integration tests (including live migration & constraint tests)
 go test -v ./...
 
-# Build production binary
+# Build production binaries
 go build -o bin/server ./cmd/server
+go build -o bin/migrate ./cmd/migrate
 
 # Run backend server (defaults to port 8080)
 go run cmd/server/main.go
 ```
 
-#### Health Check Verification
-Once running, verify HTTP server status:
+#### Health and Readiness Verification
+Once running, verify HTTP server status and database connectivity:
 ```bash
+# Liveness (HTTP server operational)
 curl -i http://localhost:8080/health
 # Response: {"success":true,"data":{"status":"healthy","service":"devflow-api","version":"0.1.0","environment":"development"},"meta":null}
+
+# Readiness (Database connectivity verified)
+curl -i http://localhost:8080/health/ready
+# Response: {"success":true,"data":{"status":"ready","database":"connected","service":"devflow-api","version":"0.1.0","environment":"development"},"meta":null}
 ```
 
 ### 4. Frontend Setup
@@ -173,6 +182,7 @@ npm run dev
 - **Sprint 1 (Foundation & Infrastructure):**
   - [x] **Phase 1 (Project Initialization & Monorepo Setup):** Complete & Verified.
   - [x] **Phase 2 (Backend Foundation & Health Check):** Complete & Tested.
-  - [ ] **Phase 3 (Database Migrations & PostgreSQL Schemas):** Pending.
+  - [x] **Phase 3 (Database Foundation & Migrations):** Complete & Verified.
+  - [ ] **Phase 4 (Frontend Foundation & API Client):** In Progress.
 - **Sprint 2 (Auth & Workspace Management):** Scheduled.
 

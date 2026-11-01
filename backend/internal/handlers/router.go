@@ -5,10 +5,12 @@ import (
 	"devflow/backend/internal/middleware"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // SetupRouter initializes Gin, attaches global middleware, and registers routes.
-func SetupRouter(cfg *config.Config) *gin.Engine {
+// The pool parameter is optional to allow offline test execution.
+func SetupRouter(cfg *config.Config, pool ...*pgxpool.Pool) *gin.Engine {
 	if cfg != nil && cfg.IsProduction() {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -31,14 +33,21 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 	r.NoRoute(NotFoundHandler)
 	r.NoMethod(MethodNotAllowedHandler)
 
-	// Health check handlers
-	healthHandler := NewHealthHandler(cfg)
+	var p *pgxpool.Pool
+	if len(pool) > 0 {
+		p = pool[0]
+	}
+
+	// Health and readiness handlers
+	healthHandler := NewHealthHandler(cfg, p)
 	r.GET("/health", healthHandler.Check)
+	r.GET("/health/ready", healthHandler.Ready)
 
 	// API v1 route group
 	v1 := r.Group("/api/v1")
 	{
 		v1.GET("/health", healthHandler.Check)
+		v1.GET("/health/ready", healthHandler.Ready)
 	}
 
 	return r
