@@ -102,18 +102,18 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
     return (
       <div className="p-16 flex flex-col items-center justify-center gap-3">
         <LoadingSpinner size="lg" />
-        <span className="text-sm text-slate-400">Loading Kanban board...</span>
+        <span className="text-xs text-muted">Loading Kanban board...</span>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-6 bg-red-950/40 border border-red-900/60 rounded-xl text-red-300 flex items-center gap-3">
-        <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
+      <div className="p-4 bg-danger-soft border border-danger/25 rounded-md text-danger flex items-center gap-2.5">
+        <AlertCircle className="w-4 h-4 text-danger shrink-0" />
         <div>
-          <p className="font-semibold text-sm">Failed to load board tasks</p>
-          <p className="text-xs text-slate-400">{error.message || 'Please refresh and try again.'}</p>
+          <p className="font-semibold text-xs">Failed to load board tasks</p>
+          <p className="text-2xs text-muted">{error.message || 'Please refresh and try again.'}</p>
         </div>
       </div>
     );

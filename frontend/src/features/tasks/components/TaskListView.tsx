@@ -88,17 +88,17 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ project }) => {
   return (
     <div className="space-y-4">
       {/* Action and Filter Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-950/40 p-3.5 rounded-xl border border-slate-800">
-        <div className="flex flex-wrap items-center gap-2.5 flex-1">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface p-3 rounded-lg border border-line shadow-sm">
+        <div className="flex flex-wrap items-center gap-2 flex-1">
           {/* Search bar */}
           <div className="relative min-w-[180px] max-w-xs flex-1">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search tasks..."
-              className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-full pl-8 pr-3 py-1.5 rounded-md bg-surface border border-line text-xs text-ink placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               data-testid="search-tasks-input"
             />
           </div>
@@ -107,7 +107,7 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ project }) => {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as TaskStatus | 'all')}
-            className="px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="px-2.5 py-1.5 rounded-md bg-surface border border-line text-xs text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             data-testid="filter-status-select"
           >
             <option value="all">All Statuses</option>
@@ -121,7 +121,7 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ project }) => {
           <select
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value as TaskPriority | 'all')}
-            className="px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="px-2.5 py-1.5 rounded-md bg-surface border border-line text-xs text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             data-testid="filter-priority-select"
           >
             <option value="all">All Priorities</option>
@@ -135,7 +135,7 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ project }) => {
           <select
             value={assigneeFilter}
             onChange={(e) => setAssigneeFilter(e.target.value)}
-            className="px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="px-2.5 py-1.5 rounded-md bg-surface border border-line text-xs text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             data-testid="filter-assignee-select"
           >
             <option value="all">All Assignees</option>
@@ -150,7 +150,7 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ project }) => {
             <button
               type="button"
               onClick={clearFilters}
-              className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors px-2 py-1"
+              className="text-xs text-accent hover:text-accent/80 transition-colors px-2 py-1 font-medium"
               data-testid="clear-filters-button"
             >
               Clear filters
@@ -161,14 +161,14 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ project }) => {
         {/* Actions: View Mode Switcher and Create Task */}
         <div className="flex items-center gap-2 self-start sm:self-auto">
           {/* View Toggle */}
-          <div className="flex items-center rounded-lg bg-slate-900 border border-slate-800 p-0.5">
+          <div className="flex items-center rounded-md bg-subtle border border-line p-0.5">
             <button
               type="button"
               onClick={() => setViewMode('board')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-colors ${
                 viewMode === 'board'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-surface text-ink font-semibold shadow-2xs'
+                  : 'text-muted hover:text-ink'
               }`}
               data-testid="view-mode-board-button"
             >
@@ -178,10 +178,10 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ project }) => {
             <button
               type="button"
               onClick={() => setViewMode('list')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium transition-colors ${
                 viewMode === 'list'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-surface text-ink font-semibold shadow-2xs'
+                  : 'text-muted hover:text-ink'
               }`}
               data-testid="view-mode-list-button"
             >
@@ -194,10 +194,10 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ project }) => {
           <button
             type="button"
             onClick={() => setIsCreateOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-500 transition-colors shadow-lg shadow-indigo-600/20 whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-ink text-surface text-xs font-medium hover:bg-ink/90 active:bg-ink transition-colors shadow-sm whitespace-nowrap"
             data-testid="open-create-task-modal-button"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
             <span>New Task</span>
           </button>
         </div>
@@ -217,16 +217,16 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ project }) => {
           {error && (
             <div
               role="alert"
-              className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm flex items-center justify-between"
+              className="p-3.5 rounded-md bg-danger-soft border border-danger/25 text-danger text-xs flex items-center justify-between"
             >
               <div className="flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                <AlertCircle className="w-4 h-4 flex-shrink-0 text-danger" />
                 <span>Failed to load tasks: {error.message}</span>
               </div>
               <button
                 type="button"
                 onClick={() => refetch()}
-                className="text-xs underline hover:text-rose-300"
+                className="text-xs underline hover:text-danger/80"
               >
                 Retry
               </button>
@@ -235,34 +235,34 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ project }) => {
 
           {/* Loading state */}
           {isLoading && (
-            <div className="py-16 flex flex-col items-center justify-center gap-3 text-slate-400">
+            <div className="py-16 flex flex-col items-center justify-center gap-3 text-muted">
               <LoadingSpinner size="md" />
-              <span className="text-sm">Loading tasks...</span>
+              <span className="text-xs">Loading tasks...</span>
             </div>
           )}
 
           {/* Task List / Table */}
           {!isLoading && !error && tasks.length > 0 && (
-        <div className="rounded-xl border border-slate-800 bg-slate-950/40 overflow-hidden">
-          <div className="divide-y divide-slate-800/80">
+        <div className="rounded-lg border border-line bg-surface overflow-hidden shadow-sm">
+          <div className="divide-y divide-line">
             {tasks.map((task) => (
               <div
                 key={task.id}
                 onClick={() => setSelectedTaskId(task.id)}
-                className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-900/60 transition-colors cursor-pointer group"
+                className="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-subtle transition-colors cursor-pointer group"
                 data-testid={`task-row-${task.id}`}
               >
                 {/* Left side: Identifier, Title, and Description */}
-                <div className="flex items-start gap-3 flex-1 min-w-0">
-                  <span className="font-mono text-xs px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-bold shrink-0 mt-0.5">
+                <div className="flex items-start gap-2.5 flex-1 min-w-0">
+                  <span className="font-mono text-2xs px-1.5 py-0.5 rounded bg-subtle text-ink-2 border border-line font-medium shrink-0 mt-0.5">
                     {task.identifier}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <h3 className="text-sm font-semibold text-white truncate group-hover:text-indigo-300 transition-colors">
+                    <h3 className="text-xs font-semibold text-ink truncate group-hover:text-accent transition-colors">
                       {task.title}
                     </h3>
                     {task.description && (
-                      <p className="text-xs text-slate-400 truncate mt-0.5">
+                      <p className="text-2xs text-muted truncate mt-0.5">
                         {task.description}
                       </p>
                     )}
@@ -270,10 +270,10 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ project }) => {
                 </div>
 
                 {/* Right side: Badges, Assignee, Due date, Actions */}
-                <div className="flex items-center gap-3 shrink-0 flex-wrap sm:flex-nowrap">
+                <div className="flex items-center gap-2.5 shrink-0 flex-wrap sm:flex-nowrap">
                   {/* Status badge */}
                   <span
-                    className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full border ${
+                    className={`text-2xs font-medium px-2 py-0.5 rounded border ${
                       TASK_STATUS_CONFIG[task.status].bg
                     } ${TASK_STATUS_CONFIG[task.status].text} ${
                       TASK_STATUS_CONFIG[task.status].border
@@ -284,7 +284,7 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ project }) => {
 
                   {/* Priority badge */}
                   <span
-                    className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full border flex items-center gap-1.5 ${
+                    className={`text-2xs font-medium px-2 py-0.5 rounded border flex items-center gap-1.5 ${
                       TASK_PRIORITY_CONFIG[task.priority].bg
                     } ${TASK_PRIORITY_CONFIG[task.priority].text} ${
                       TASK_PRIORITY_CONFIG[task.priority].border
@@ -297,28 +297,28 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ project }) => {
                   </span>
 
                   {/* Assignee */}
-                  <div className="flex items-center gap-1.5 text-xs text-slate-300 min-w-[100px]">
-                    <div className="w-5 h-5 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] text-slate-400 font-bold overflow-hidden shrink-0">
+                  <div className="flex items-center gap-1.5 text-xs text-ink-2 min-w-[100px]">
+                    <div className="w-5 h-5 rounded-full bg-subtle border border-line flex items-center justify-center text-2xs text-ink-2 font-medium overflow-hidden shrink-0">
                       {task.assignee?.name ? (
                         task.assignee.name.charAt(0).toUpperCase()
                       ) : (
-                        <User className="w-3 h-3 text-slate-500" />
+                        <User className="w-3 h-3 text-muted" />
                       )}
                     </div>
-                    <span className="truncate max-w-[90px]">
+                    <span className="truncate max-w-[90px] text-xs">
                       {task.assignee?.name || task.assignee?.email?.split('@')[0] || (
-                        <span className="text-slate-500 italic">Unassigned</span>
+                        <span className="text-muted italic text-2xs">Unassigned</span>
                       )}
                     </span>
                   </div>
 
                   {/* Due date */}
-                  <div className="text-xs min-w-[70px] text-right">
+                  <div className="text-2xs min-w-[70px] text-right font-mono">
                     <span
                       className={`inline-flex items-center gap-1 ${
                         isOverdue(task.due_date, task.status)
-                          ? 'text-rose-400 font-semibold'
-                          : 'text-slate-400'
+                          ? 'text-danger font-semibold'
+                          : 'text-muted'
                       }`}
                     >
                       <Calendar className="w-3 h-3" />
@@ -327,14 +327,14 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ project }) => {
                   </div>
 
                   {/* Action buttons */}
-                  <div className="flex items-center gap-1 pl-2 border-l border-slate-800">
+                  <div className="flex items-center gap-1 pl-2 border-l border-line">
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         setEditingTask(task);
                       }}
-                      className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                      className="p-1 rounded text-muted hover:text-ink hover:bg-subtle transition-colors"
                       title="Edit task"
                       data-testid={`edit-task-btn-${task.id}`}
                     >
@@ -346,7 +346,7 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ project }) => {
                         e.stopPropagation();
                         setDeletingTask(task);
                       }}
-                      className="p-1 rounded text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                      className="p-1 rounded text-muted hover:text-danger hover:bg-danger-soft transition-colors"
                       title="Delete task"
                       data-testid={`delete-task-btn-${task.id}`}
                     >
@@ -359,12 +359,12 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ project }) => {
           </div>
 
           {/* List Footer Count */}
-          <div className="p-3 bg-slate-950/60 border-t border-slate-800/80 text-xs text-slate-400 flex items-center justify-between">
+          <div className="p-2.5 bg-subtle/40 border-t border-line text-2xs text-muted flex items-center justify-between font-mono">
             <span>
-              Showing <strong className="text-slate-200">{tasks.length}</strong> of{' '}
-              <strong className="text-slate-200">{total}</strong> tasks
+              Showing <strong className="text-ink font-semibold">{tasks.length}</strong> of{' '}
+              <strong className="text-ink font-semibold">{total}</strong> tasks
             </span>
-            <span className="font-mono text-[11px] text-slate-500">
+            <span>
               Project Key: {project.key}
             </span>
           </div>
@@ -373,18 +373,18 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ project }) => {
 
       {/* Empty State: No tasks matching filter */}
       {!isLoading && !error && tasks.length === 0 && hasFilterActive && (
-        <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-12 text-center space-y-3">
-          <div className="w-10 h-10 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center mx-auto">
-            <Filter className="w-5 h-5" />
+        <div className="rounded-lg border border-line bg-surface p-10 text-center space-y-2.5 shadow-sm">
+          <div className="w-9 h-9 rounded-full bg-subtle text-muted flex items-center justify-center mx-auto border border-line">
+            <Filter className="w-4 h-4" />
           </div>
-          <h3 className="text-sm font-semibold text-slate-200">No matching tasks</h3>
-          <p className="text-xs text-slate-400 max-w-sm mx-auto">
+          <h3 className="text-xs font-semibold text-ink">No matching tasks</h3>
+          <p className="text-2xs text-muted max-w-sm mx-auto">
             No tasks match the active filters or search criteria.
           </p>
           <button
             type="button"
             onClick={clearFilters}
-            className="text-xs text-indigo-400 hover:text-indigo-300 underline font-medium"
+            className="text-xs text-accent hover:text-accent/80 font-medium"
           >
             Clear all filters
           </button>
@@ -393,24 +393,24 @@ export const TaskListView: React.FC<TaskListViewProps> = ({ project }) => {
 
       {/* Empty State: Zero tasks in project */}
       {!isLoading && !error && tasks.length === 0 && !hasFilterActive && (
-        <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-12 text-center space-y-4">
-          <div className="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center mx-auto border border-indigo-500/20">
-            <CheckSquare className="w-6 h-6" />
+        <div className="rounded-lg border border-line bg-surface p-10 text-center space-y-3.5 shadow-sm">
+          <div className="w-10 h-10 rounded-md bg-subtle text-muted flex items-center justify-center mx-auto border border-line">
+            <CheckSquare className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-base font-semibold text-slate-200">No tasks created yet</h3>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto mt-1">
+            <h3 className="text-sm font-semibold text-ink">No tasks created yet</h3>
+            <p className="text-xs text-muted max-w-sm mx-auto mt-1">
               Create your first task to start tracking work under project{' '}
-              <strong className="text-slate-300 font-mono">{project.key}</strong>.
+              <strong className="text-ink font-mono">{project.key}</strong>.
             </p>
           </div>
           <button
             type="button"
             onClick={() => setIsCreateOpen(true)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-500 transition-colors shadow-lg shadow-indigo-600/20"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-ink text-surface text-xs font-medium hover:bg-ink/90 transition-colors shadow-sm"
             data-testid="empty-create-task-button"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
             <span>Create First Task</span>
           </button>
         </div>

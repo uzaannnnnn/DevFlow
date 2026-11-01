@@ -68,33 +68,33 @@ export const CreateWorkspaceModal: React.FC<CreateWorkspaceModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay/50 backdrop-blur-xs"
       role="dialog"
       aria-modal="true"
       aria-labelledby="create-workspace-title"
     >
-      <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-xl shadow-2xl p-6 text-slate-100">
-        <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+      <div className="w-full max-w-md bg-surface border border-line rounded-lg shadow-modal p-6 text-ink">
+        <div className="flex items-center justify-between pb-3.5 border-b border-line">
           <div className="flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-indigo-400" />
-            <h2 id="create-workspace-title" className="text-lg font-semibold">
+            <Building2 className="w-4 h-4 text-accent" />
+            <h2 id="create-workspace-title" className="text-sm font-semibold text-ink">
               Create New Workspace
             </h2>
           </div>
           <button
             type="button"
             onClick={handleClose}
-            className="text-slate-400 hover:text-slate-200 transition-colors p-1 rounded-md"
+            className="text-muted hover:text-ink transition-colors p-1 rounded-md"
             aria-label="Close dialog"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {serverError && (
           <div
             role="alert"
-            className="mt-4 p-3 text-sm text-red-300 bg-red-950/40 border border-red-900/60 rounded-md"
+            className="mt-3.5 p-3 text-xs text-danger bg-danger-soft border border-danger/25 rounded-md"
           >
             {serverError}
           </div>
@@ -102,8 +102,8 @@ export const CreateWorkspaceModal: React.FC<CreateWorkspaceModalProps> = ({
 
         <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-4" noValidate>
           <div>
-            <label htmlFor="ws-name" className="block text-sm font-medium text-slate-300">
-              Workspace Name <span className="text-red-400">*</span>
+            <label htmlFor="ws-name" className="block text-xs font-medium text-ink-2">
+              Workspace Name <span className="text-danger">*</span>
             </label>
             <input
               id="ws-name"
@@ -112,18 +112,18 @@ export const CreateWorkspaceModal: React.FC<CreateWorkspaceModalProps> = ({
               {...register('name')}
               aria-invalid={!!errors.name}
               aria-describedby={errors.name ? 'ws-name-error' : undefined}
-              className="mt-1 block w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-md text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="mt-1 block w-full px-3 py-2 bg-surface border border-line rounded-md text-xs text-ink placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             />
             {errors.name && (
-              <p id="ws-name-error" className="mt-1 text-xs text-red-400">
+              <p id="ws-name-error" className="mt-1 text-2xs text-danger">
                 {errors.name.message}
               </p>
             )}
           </div>
 
           <div>
-            <label htmlFor="ws-slug" className="block text-sm font-medium text-slate-300">
-              Slug <span className="text-xs text-slate-500">(Optional, auto-generated if blank)</span>
+            <label htmlFor="ws-slug" className="block text-xs font-medium text-ink-2">
+              Slug <span className="text-2xs text-muted">(Optional, auto-generated if blank)</span>
             </label>
             <input
               id="ws-slug"
@@ -132,18 +132,18 @@ export const CreateWorkspaceModal: React.FC<CreateWorkspaceModalProps> = ({
               {...register('slug')}
               aria-invalid={!!errors.slug}
               aria-describedby={errors.slug ? 'ws-slug-error' : undefined}
-              className="mt-1 block w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-md text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="mt-1 block w-full px-3 py-2 bg-surface border border-line rounded-md text-xs text-ink placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent font-mono"
             />
             {errors.slug && (
-              <p id="ws-slug-error" className="mt-1 text-xs text-red-400">
+              <p id="ws-slug-error" className="mt-1 text-2xs text-danger">
                 {errors.slug.message}
               </p>
             )}
           </div>
 
           <div>
-            <label htmlFor="ws-desc" className="block text-sm font-medium text-slate-300">
-              Description <span className="text-xs text-slate-500">(Optional)</span>
+            <label htmlFor="ws-desc" className="block text-xs font-medium text-ink-2">
+              Description <span className="text-2xs text-muted">(Optional)</span>
             </label>
             <textarea
               id="ws-desc"
@@ -152,32 +152,32 @@ export const CreateWorkspaceModal: React.FC<CreateWorkspaceModalProps> = ({
               {...register('description')}
               aria-invalid={!!errors.description}
               aria-describedby={errors.description ? 'ws-desc-error' : undefined}
-              className="mt-1 block w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-md text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+              className="mt-1 block w-full px-3 py-2 bg-surface border border-line rounded-md text-xs text-ink placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent resize-none"
             />
             {errors.description && (
-              <p id="ws-desc-error" className="mt-1 text-xs text-red-400">
+              <p id="ws-desc-error" className="mt-1 text-2xs text-danger">
                 {errors.description.message}
               </p>
             )}
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+          <div className="flex items-center justify-end gap-2.5 pt-3.5 border-t border-line">
             <button
               type="button"
               onClick={handleClose}
               disabled={isSubmitting}
-              className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-slate-200 transition-colors rounded-md"
+              className="px-3 py-1.5 text-xs font-medium text-muted hover:text-ink transition-colors rounded-md"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-md shadow-sm transition-colors"
+              className="flex items-center justify-center px-3.5 py-1.5 text-xs font-medium text-surface bg-ink hover:bg-ink/90 active:bg-ink disabled:opacity-50 disabled:cursor-not-allowed rounded-md shadow-sm transition-colors"
             >
               {isSubmitting ? (
                 <>
-                  <LoadingSpinner size="sm" className="mr-2 text-white" />
+                  <LoadingSpinner size="sm" className="mr-2 text-surface" />
                   Creating...
                 </>
               ) : (

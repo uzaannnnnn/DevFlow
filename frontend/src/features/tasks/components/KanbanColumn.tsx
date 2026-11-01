@@ -30,23 +30,23 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col rounded-2xl bg-slate-950/60 border transition-colors min-h-[500px] w-full ${
+      className={`flex flex-col rounded-lg bg-subtle/50 border transition-colors min-h-[500px] w-full ${
         isOver
-          ? 'border-indigo-500/80 bg-slate-900/60 ring-2 ring-indigo-500/20'
-          : 'border-slate-800/80'
+          ? 'border-accent bg-subtle ring-2 ring-accent/20'
+          : 'border-line'
       }`}
       data-testid={`kanban-column-${status}`}
     >
       {/* Column Header */}
-      <div className="flex items-center justify-between p-4 border-b border-slate-800/80">
-        <div className="flex items-center gap-2.5">
+      <div className="flex items-center justify-between p-3 border-b border-line">
+        <div className="flex items-center gap-2">
           <span
-            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${config.bg} ${config.text} ${config.border}`}
+            className={`inline-flex items-center px-2 py-0.5 rounded text-2xs font-semibold border ${config.bg} ${config.text} ${config.border}`}
           >
             {config.label}
           </span>
           <span
-            className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400"
+            className="text-2xs font-mono font-semibold px-1.5 py-0.2 rounded bg-surface text-ink-2 border border-line"
             data-testid={`column-count-${status}`}
           >
             {tasks.length}
@@ -56,16 +56,16 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
         <button
           type="button"
           onClick={() => onAddTask(status)}
-          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors"
+          className="p-1 rounded text-muted hover:text-ink hover:bg-subtle transition-colors"
           title={`Add task to ${config.label}`}
           data-testid={`add-task-to-${status}-button`}
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-3.5 h-3.5" />
         </button>
       </div>
 
       {/* Task Cards Container */}
-      <div className="flex-1 p-3 space-y-3 overflow-y-auto max-h-[calc(100vh-280px)]">
+      <div className="flex-1 p-2.5 space-y-2.5 overflow-y-auto max-h-[calc(100vh-280px)]">
         {tasks.map((task) => (
           <KanbanCard
             key={task.id}
@@ -75,8 +75,8 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
         ))}
 
         {tasks.length === 0 && (
-          <div className="h-32 rounded-xl border border-dashed border-slate-800/80 flex flex-col items-center justify-center p-4 text-center">
-            <span className="text-xs text-slate-500">No tasks in this column</span>
+          <div className="h-28 rounded-md border border-dashed border-line flex flex-col items-center justify-center p-3 text-center">
+            <span className="text-2xs text-muted font-medium">No tasks in this column</span>
           </div>
         )}
       </div>

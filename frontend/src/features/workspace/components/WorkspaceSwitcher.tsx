@@ -7,15 +7,15 @@ import { WorkspaceRole } from '../types';
 const getRoleBadgeClass = (role?: WorkspaceRole | null): string => {
   switch (role) {
     case 'owner':
-      return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+      return 'bg-accent-soft text-accent border-accent/25';
     case 'admin':
-      return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+      return 'bg-info-soft text-info border-info/25';
     case 'member':
-      return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+      return 'bg-success-soft text-success border-success/25';
     case 'viewer':
-      return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
+      return 'bg-subtle text-muted border-line';
     default:
-      return 'bg-slate-800 text-slate-400 border-slate-700';
+      return 'bg-subtle text-muted border-line';
   }
 };
 
@@ -43,10 +43,10 @@ export const WorkspaceSwitcher: React.FC = () => {
           onClick={() => setIsOpen(!isOpen)}
           aria-haspopup="true"
           aria-expanded={isOpen}
-          className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-100 text-sm font-medium transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="flex items-center gap-2.5 px-3 py-1.5 rounded-md bg-surface border border-line hover:border-line-strong text-ink text-sm font-medium transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           data-testid="workspace-switcher-trigger"
         >
-          <div className="w-5 h-5 rounded bg-indigo-600/20 text-indigo-400 flex items-center justify-center font-bold text-xs">
+          <div className="w-5 h-5 rounded bg-subtle text-ink-2 flex items-center justify-center font-bold text-xs border border-line">
             <Briefcase className="w-3.5 h-3.5" />
           </div>
           <span className="truncate max-w-[140px] text-left">
@@ -54,7 +54,7 @@ export const WorkspaceSwitcher: React.FC = () => {
           </span>
           {activeRole && (
             <span
-              className={`text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded border ${getRoleBadgeClass(
+              className={`text-2xs uppercase font-semibold tracking-wider px-1.5 py-0.5 rounded border ${getRoleBadgeClass(
                 activeRole
               )}`}
               data-testid="active-role-badge"
@@ -63,18 +63,18 @@ export const WorkspaceSwitcher: React.FC = () => {
             </span>
           )}
           <ChevronDown
-            className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+            className={`w-4 h-4 text-muted transition-transform ${isOpen ? 'rotate-180' : ''}`}
           />
         </button>
 
         {isOpen && (
           <div
-            className="absolute left-0 mt-2 w-64 origin-top-left rounded-lg bg-slate-900 border border-slate-800 shadow-xl py-1 z-50 text-slate-200"
+            className="absolute left-0 mt-2 w-64 origin-top-left rounded-md bg-surface border border-line shadow-modal py-1 z-50 text-ink"
             role="menu"
             aria-orientation="vertical"
             data-testid="workspace-dropdown"
           >
-            <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-800">
+            <div className="px-3 py-2 text-2xs font-semibold text-muted uppercase tracking-wider border-b border-line">
               Workspaces ({workspaces.length})
             </div>
 
@@ -90,15 +90,15 @@ export const WorkspaceSwitcher: React.FC = () => {
                       setIsOpen(false);
                     }}
                     role="menuitem"
-                    className={`w-full flex items-center justify-between px-3 py-2 text-sm text-left transition-colors hover:bg-slate-800/70 ${
-                      isSelected ? 'bg-slate-800/40 text-indigo-300 font-semibold' : 'text-slate-300'
+                    className={`w-full flex items-center justify-between px-3 py-2 text-sm text-left transition-colors hover:bg-subtle ${
+                      isSelected ? 'bg-subtle/80 text-ink font-semibold' : 'text-ink-2'
                     }`}
                   >
                     <div className="flex items-center gap-2 truncate">
                       <span className="truncate">{ws.name}</span>
                       {ws.role && (
                         <span
-                          className={`text-[9px] uppercase font-bold px-1 py-0.2 rounded border ${getRoleBadgeClass(
+                          className={`text-2xs uppercase font-semibold px-1 py-0.2 rounded border ${getRoleBadgeClass(
                             ws.role
                           )}`}
                         >
@@ -106,17 +106,17 @@ export const WorkspaceSwitcher: React.FC = () => {
                         </span>
                       )}
                     </div>
-                    {isSelected && <Check className="w-4 h-4 text-indigo-400 shrink-0" />}
+                    {isSelected && <Check className="w-4 h-4 text-accent shrink-0" />}
                   </button>
                 );
               })}
 
               {workspaces.length === 0 && (
-                <div className="px-3 py-2 text-xs text-slate-500">No workspaces found</div>
+                <div className="px-3 py-2 text-xs text-muted">No workspaces found</div>
               )}
             </div>
 
-            <div className="border-t border-slate-800 pt-1">
+            <div className="border-t border-line pt-1">
               <button
                 type="button"
                 onClick={() => {
@@ -124,7 +124,7 @@ export const WorkspaceSwitcher: React.FC = () => {
                   setIsModalOpen(true);
                 }}
                 role="menuitem"
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-indigo-400 hover:text-indigo-300 hover:bg-slate-800/70 transition-colors"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-accent hover:text-accent/90 hover:bg-subtle transition-colors font-medium"
                 data-testid="create-workspace-trigger"
               >
                 <Plus className="w-4 h-4" />

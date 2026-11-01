@@ -100,24 +100,24 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay/50 backdrop-blur-xs"
       role="dialog"
       aria-modal="true"
       aria-labelledby="task-detail-title"
     >
-      <div className="relative w-full max-w-2xl rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+      <div className="relative w-full max-w-2xl rounded-lg bg-surface border border-line shadow-modal overflow-hidden text-ink max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-800 px-6 py-4">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between border-b border-line px-6 py-3.5">
+          <div className="flex items-center gap-2.5">
             {task && (
-              <span className="font-mono text-xs px-2.5 py-1 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-bold">
+              <span className="font-mono text-2xs px-2 py-0.5 rounded bg-subtle text-accent border border-accent/25 font-semibold">
                 {task.identifier}
               </span>
             )}
             <h2
               id="task-detail-title"
               data-testid="detail-task-title"
-              className="text-base font-semibold text-white truncate max-w-md"
+              className="text-sm font-semibold text-ink truncate max-w-md"
             >
               {isLoading ? 'Loading task details...' : task?.title}
             </h2>
@@ -125,29 +125,29 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"
+            className="p-1 rounded-md text-muted hover:text-ink transition-colors"
             aria-label="Close dialog"
             data-testid="close-task-detail-modal"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Content Body */}
-        <div className="p-6 space-y-6 overflow-y-auto flex-1">
+        <div className="p-6 space-y-5 overflow-y-auto flex-1">
           {isLoading && (
-            <div className="py-12 flex flex-col items-center justify-center gap-3 text-slate-400">
+            <div className="py-12 flex flex-col items-center justify-center gap-3 text-muted">
               <LoadingSpinner size="md" />
-              <span className="text-sm">Fetching task details...</span>
+              <span className="text-xs">Fetching task details...</span>
             </div>
           )}
 
           {error && (
             <div
               role="alert"
-              className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm flex items-center gap-2"
+              className="p-3.5 rounded-md bg-danger-soft border border-danger/25 text-danger text-xs flex items-center gap-2"
             >
-              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span>Failed to load task: {error.message}</span>
             </div>
           )}
@@ -155,7 +155,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
           {actionError && (
             <div
               role="alert"
-              className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs"
+              className="p-3 rounded-md bg-danger-soft border border-danger/25 text-danger text-xs"
             >
               {actionError}
             </div>
@@ -164,16 +164,16 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
           {task && (
             <>
               {/* Status and Priority Quick Controls */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-950/50 p-4 rounded-xl border border-slate-800/80">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 bg-subtle/50 p-3.5 rounded-md border border-line">
                 {/* Status selector */}
-                <div className="space-y-1.5">
-                  <span className="text-xs text-slate-400 font-medium">Status</span>
+                <div className="space-y-1">
+                  <span className="text-2xs text-muted font-medium uppercase tracking-wider">Status</span>
                   <div className="flex items-center gap-2">
                     <select
                       value={task.status}
                       onChange={(e) => handleStatusChange(e.target.value as TaskStatus)}
                       disabled={updateMutation.isPending}
-                      className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      className="w-full px-2.5 py-1.5 rounded-md bg-surface border border-line text-xs text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                       data-testid="detail-task-status-select"
                     >
                       <option value="todo">To Do</option>
@@ -182,7 +182,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                       <option value="done">Done</option>
                     </select>
                     <span
-                      className={`text-xs px-2.5 py-1 rounded-full border whitespace-nowrap font-medium ${
+                      className={`text-2xs px-2 py-0.5 rounded border whitespace-nowrap font-medium ${
                         TASK_STATUS_CONFIG[task.status].bg
                       } ${TASK_STATUS_CONFIG[task.status].text} ${
                         TASK_STATUS_CONFIG[task.status].border
@@ -194,11 +194,11 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 </div>
 
                 {/* Priority display */}
-                <div className="space-y-1.5">
-                  <span className="text-xs text-slate-400 font-medium">Priority</span>
+                <div className="space-y-1">
+                  <span className="text-2xs text-muted font-medium uppercase tracking-wider">Priority</span>
                   <div className="flex items-center gap-2 pt-1">
                     <span
-                      className={`text-xs px-3 py-1 rounded-full border flex items-center gap-1.5 font-medium ${
+                      className={`text-2xs px-2.5 py-1 rounded border flex items-center gap-1.5 font-medium ${
                         TASK_PRIORITY_CONFIG[task.priority].bg
                       } ${TASK_PRIORITY_CONFIG[task.priority].text} ${
                         TASK_PRIORITY_CONFIG[task.priority].border
@@ -215,33 +215,33 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               </div>
 
               {/* Description */}
-              <div className="space-y-2">
-                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <div className="space-y-1.5">
+                <h3 className="text-2xs font-semibold text-muted uppercase tracking-wider">
                   Description
                 </h3>
                 <div
-                  className="p-4 rounded-xl bg-slate-950/40 border border-slate-800 text-sm text-slate-200 whitespace-pre-wrap min-h-[5rem]"
+                  className="p-3.5 rounded-md bg-surface border border-line text-xs text-ink whitespace-pre-wrap min-h-[5rem]"
                   data-testid="detail-task-description"
                 >
                   {task.description ? task.description : (
-                    <span className="text-slate-500 italic">No description provided.</span>
+                    <span className="text-muted italic">No description provided.</span>
                   )}
                 </div>
               </div>
 
               {/* Properties Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
                 {/* Assignee */}
-                <div className="space-y-1.5 p-3 rounded-xl bg-slate-950/30 border border-slate-800/60">
-                  <span className="text-slate-400 font-medium flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-indigo-400" />
+                <div className="space-y-1 p-3 rounded-md bg-surface border border-line">
+                  <span className="text-muted font-medium flex items-center gap-1.5 text-2xs uppercase tracking-wider">
+                    <User className="w-3.5 h-3.5 text-accent" />
                     <span>Assignee</span>
                   </span>
                   <select
                     value={task.assignee_id || ''}
                     onChange={(e) => handleAssigneeChange(e.target.value)}
                     disabled={updateMutation.isPending}
-                    className="w-full mt-1 px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full mt-1 px-2.5 py-1.5 rounded-md bg-surface border border-line text-xs text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                     data-testid="detail-task-assignee-select"
                   >
                     <option value="">Unassigned</option>
@@ -254,24 +254,24 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 </div>
 
                 {/* Due Date */}
-                <div className="space-y-1.5 p-3 rounded-xl bg-slate-950/30 border border-slate-800/60">
-                  <span className="text-slate-400 font-medium flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+                <div className="space-y-1 p-3 rounded-md bg-surface border border-line">
+                  <span className="text-muted font-medium flex items-center gap-1.5 text-2xs uppercase tracking-wider">
+                    <Calendar className="w-3.5 h-3.5 text-accent" />
                     <span>Due Date</span>
                   </span>
                   <div className="pt-1 flex items-center gap-2">
                     <span
-                      className={`text-xs font-medium ${
+                      className={`text-xs font-mono font-medium ${
                         isOverdue(task.due_date, task.status)
-                          ? 'text-rose-400 font-semibold'
-                          : 'text-slate-200'
+                          ? 'text-danger font-semibold'
+                          : 'text-ink'
                       }`}
                       data-testid="detail-task-due-date"
                     >
                       {formatDate(task.due_date)}
                     </span>
                     {isOverdue(task.due_date, task.status) && (
-                      <span className="px-1.5 py-0.5 rounded text-[10px] bg-rose-500/10 text-rose-400 border border-rose-500/20 font-semibold">
+                      <span className="px-1.5 py-0.2 rounded text-2xs bg-danger-soft text-danger border border-danger/25 font-semibold">
                         Overdue
                       </span>
                     )}
@@ -279,23 +279,23 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 </div>
 
                 {/* Creator */}
-                <div className="space-y-1.5 p-3 rounded-xl bg-slate-950/30 border border-slate-800/60">
-                  <span className="text-slate-400 font-medium flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400" />
+                <div className="space-y-1 p-3 rounded-md bg-surface border border-line">
+                  <span className="text-muted font-medium flex items-center gap-1.5 text-2xs uppercase tracking-wider">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-accent" />
                     <span>Created By</span>
                   </span>
-                  <p className="pt-1 text-slate-200" data-testid="detail-task-creator">
+                  <p className="pt-1 text-xs text-ink" data-testid="detail-task-creator">
                     {task.creator?.name || task.creator?.email || 'Unknown'}
                   </p>
                 </div>
 
                 {/* Timestamps */}
-                <div className="space-y-1.5 p-3 rounded-xl bg-slate-950/30 border border-slate-800/60">
-                  <span className="text-slate-400 font-medium flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-indigo-400" />
+                <div className="space-y-1 p-3 rounded-md bg-surface border border-line">
+                  <span className="text-muted font-medium flex items-center gap-1.5 text-2xs uppercase tracking-wider">
+                    <Clock className="w-3.5 h-3.5 text-accent" />
                     <span>Updated</span>
                   </span>
-                  <p className="pt-1 text-slate-400 text-[11px]" data-testid="detail-task-updated-at">
+                  <p className="pt-1 text-muted text-2xs font-mono" data-testid="detail-task-updated-at">
                     {formatDateTime(task.updated_at)}
                   </p>
                 </div>
@@ -309,29 +309,29 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
         {/* Footer Actions */}
         {task && (
-          <div className="flex items-center justify-between border-t border-slate-800 px-6 py-4 bg-slate-950/40">
+          <div className="flex items-center justify-between border-t border-line px-6 py-3.5 bg-subtle/30">
             <button
               type="button"
               onClick={() => onDelete(task)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-colors border border-transparent hover:border-rose-500/20"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-danger hover:bg-danger-soft transition-colors"
               data-testid="delete-task-from-detail-button"
             >
               <Trash2 className="w-3.5 h-3.5" />
               <span>Delete Task</span>
             </button>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+                className="px-3.5 py-1.5 rounded-md text-xs font-medium text-muted hover:text-ink transition-colors"
               >
                 Close
               </button>
               <button
                 type="button"
                 onClick={() => onEdit(task)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium bg-indigo-600 text-white hover:bg-indigo-500 transition-colors shadow-lg shadow-indigo-600/20"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-medium bg-ink text-surface hover:bg-ink/90 active:bg-ink transition-colors shadow-sm"
                 data-testid="edit-task-from-detail-button"
               >
                 <Edit3 className="w-3.5 h-3.5" />

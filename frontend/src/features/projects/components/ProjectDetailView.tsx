@@ -82,64 +82,70 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
   const canManage = canUpdateProject(project.role);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Back button */}
       <div>
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-ink transition-colors font-medium"
           data-testid="back-to-projects-button"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-3.5 h-3.5" />
           <span>Back to Projects</span>
         </button>
       </div>
 
       {/* Project Banner */}
-      <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="rounded-lg border border-line bg-surface p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
-          <div className="flex items-center gap-3 flex-wrap">
-            <h2 className="text-2xl font-bold tracking-tight text-white">{project.name}</h2>
-            <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h2 className="text-xl font-semibold tracking-tight text-ink">{project.name}</h2>
+            <span className="font-mono text-2xs font-semibold px-2 py-0.5 rounded bg-accent-soft text-accent border border-accent/25">
               {project.key}
             </span>
             {project.role && (
-              <span className="text-xs uppercase font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1">
+              <span className={`text-2xs uppercase font-medium px-2 py-0.5 rounded border flex items-center gap-1 ${
+                project.role === 'owner'
+                  ? 'bg-accent-soft text-accent border-accent/25'
+                  : project.role === 'admin'
+                  ? 'bg-info-soft text-info border-info/25'
+                  : 'bg-success-soft text-success border-success/25'
+              }`}>
                 {project.role === 'owner' ? (
-                  <Shield className="w-3 h-3 text-amber-400" />
+                  <Shield className="w-3 h-3 text-accent" />
                 ) : project.role === 'admin' ? (
-                  <Shield className="w-3 h-3 text-blue-400" />
+                  <Shield className="w-3 h-3 text-info" />
                 ) : (
-                  <User className="w-3 h-3 text-emerald-400" />
+                  <User className="w-3 h-3 text-success" />
                 )}
                 {project.role}
               </span>
             )}
           </div>
           {project.description && (
-            <p className="text-sm text-slate-400 max-w-2xl">{project.description}</p>
+            <p className="text-xs text-muted max-w-2xl mt-0.5">{project.description}</p>
           )}
         </div>
 
-        <div className="flex items-center gap-3 text-xs text-slate-400 sm:self-center">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800">
-            <Hash className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Tasks: <strong className="text-slate-200">{project.task_counter}</strong></span>
+        <div className="flex items-center gap-3 text-xs text-muted sm:self-center">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-subtle border border-line">
+            <Hash className="w-3.5 h-3.5 text-accent" />
+            <span>Tasks: <strong className="text-ink font-mono font-semibold">{project.task_counter}</strong></span>
           </div>
         </div>
       </div>
 
       {/* Navigation Tabs */}
-      <div className="border-b border-slate-800">
-        <nav className="flex space-x-6 text-sm">
+      <div className="border-b border-line overflow-x-auto scrollbar-none">
+        <nav className="flex space-x-6 text-sm min-w-max">
           <button
             type="button"
             onClick={() => setActiveTab('tasks')}
-            className={`py-3 px-1 border-b-2 font-medium flex items-center gap-2 transition-colors ${
+            className={`py-2.5 px-1 border-b-2 text-xs font-medium flex items-center gap-2 transition-colors ${
               activeTab === 'tasks'
-                ? 'border-indigo-500 text-indigo-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'border-accent text-accent font-semibold'
+                : 'border-transparent text-muted hover:text-ink'
             }`}
             data-testid="project-tab-tasks"
           >
@@ -150,10 +156,10 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('members')}
-            className={`py-3 px-1 border-b-2 font-medium flex items-center gap-2 transition-colors ${
+            className={`py-2.5 px-1 border-b-2 text-xs font-medium flex items-center gap-2 transition-colors ${
               activeTab === 'members'
-                ? 'border-indigo-500 text-indigo-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'border-accent text-accent font-semibold'
+                : 'border-transparent text-muted hover:text-ink'
             }`}
             data-testid="project-tab-members"
           >
@@ -164,10 +170,10 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('activity')}
-            className={`py-3 px-1 border-b-2 font-medium flex items-center gap-2 transition-colors ${
+            className={`py-2.5 px-1 border-b-2 text-xs font-medium flex items-center gap-2 transition-colors ${
               activeTab === 'activity'
-                ? 'border-indigo-500 text-indigo-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'border-accent text-accent font-semibold'
+                : 'border-transparent text-muted hover:text-ink'
             }`}
             data-testid="project-tab-activity"
           >
@@ -179,10 +185,10 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab('settings')}
-              className={`py-3 px-1 border-b-2 font-medium flex items-center gap-2 transition-colors ${
+              className={`py-2.5 px-1 border-b-2 text-xs font-medium flex items-center gap-2 transition-colors ${
                 activeTab === 'settings'
-                  ? 'border-indigo-500 text-indigo-400'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  ? 'border-accent text-accent font-semibold'
+                  : 'border-transparent text-muted hover:text-ink'
               }`}
               data-testid="project-tab-settings"
             >

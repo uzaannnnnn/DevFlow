@@ -76,41 +76,41 @@ export const ProjectSettingsView: React.FC<ProjectSettingsViewProps> = ({
   };
 
   return (
-    <div className="space-y-8 max-w-2xl">
+    <div className="space-y-6 max-w-2xl">
       {/* Title */}
       <div>
-        <h3 className="text-lg font-semibold text-slate-100">Project Settings</h3>
-        <p className="text-sm text-slate-400">
-          Manage general settings and lifecycle for <span className="font-semibold text-indigo-400">[{project.key}] {project.name}</span>.
+        <h3 className="text-base font-semibold text-ink">Project Settings</h3>
+        <p className="text-xs text-muted mt-0.5">
+          Manage general settings and lifecycle for <span className="font-semibold text-ink">[{project.key}] {project.name}</span>.
         </p>
       </div>
 
       {successMessage && (
-        <div className="p-4 bg-emerald-950/40 border border-emerald-900/60 rounded-xl text-sm text-emerald-300 flex items-center gap-3">
-          <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+        <div className="p-3 bg-success-soft border border-success/25 rounded-md text-xs text-success flex items-center gap-2.5">
+          <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
           <span>{successMessage}</span>
         </div>
       )}
 
       {errorMessage && (
-        <div className="p-4 bg-red-950/40 border border-red-900/60 rounded-xl text-sm text-red-300 flex items-center gap-3">
-          <AlertTriangle className="w-5 h-5 text-red-400 shrink-0" />
+        <div className="p-3 bg-danger-soft border border-danger/25 rounded-md text-xs text-danger flex items-center gap-2.5">
+          <AlertTriangle className="w-4 h-4 text-danger shrink-0" />
           <span>{errorMessage}</span>
         </div>
       )}
 
       {/* General Settings Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-slate-950/40 border border-slate-800 rounded-xl p-6 space-y-6">
-        <div className="flex items-center gap-2 pb-4 border-b border-slate-800 text-sm font-semibold text-slate-200">
-          <Settings className="w-4 h-4 text-indigo-400" />
+      <form onSubmit={handleSubmit(onSubmit)} className="bg-surface border border-line rounded-lg shadow-sm p-6 space-y-5">
+        <div className="flex items-center gap-2 pb-3.5 border-b border-line text-xs font-semibold text-ink uppercase tracking-wider">
+          <Settings className="w-4 h-4 text-accent" />
           <span>General Information</span>
         </div>
 
         {/* Project Key (Permanently Immutable - Decision 6) */}
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1 flex items-center justify-between">
+          <label className="block text-xs font-medium text-ink-2 mb-1 flex items-center justify-between">
             <span>Project Key</span>
-            <span className="text-xs text-amber-400/90 flex items-center gap-1 font-normal">
+            <span className="text-2xs text-accent flex items-center gap-1 font-normal">
               <Lock className="w-3 h-3" /> Immutable (Decision 6)
             </span>
           </label>
@@ -120,34 +120,34 @@ export const ProjectSettingsView: React.FC<ProjectSettingsViewProps> = ({
               value={project.key}
               readOnly
               disabled
-              className="w-full px-3 py-2 bg-slate-900/80 border border-slate-800 rounded-md text-slate-400 font-mono text-sm cursor-not-allowed select-none"
+              className="w-full px-3 py-2 bg-subtle/60 border border-line rounded-md text-muted font-mono text-xs cursor-not-allowed select-none"
             />
           </div>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-2xs text-muted">
             Project keys are permanently immutable once created to ensure stable task identifiers across Git branches and integrations.
           </p>
         </div>
 
         {/* Project Name */}
         <div>
-          <label htmlFor="settings-project-name" className="block text-sm font-medium text-slate-300 mb-1">
-            Project Name <span className="text-red-400">*</span>
+          <label htmlFor="settings-project-name" className="block text-xs font-medium text-ink-2 mb-1">
+            Project Name <span className="text-danger">*</span>
           </label>
           <input
             id="settings-project-name"
             type="text"
             disabled={!canEdit || updateMutation.isPending}
             {...register('name')}
-            className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-md text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
+            className="w-full px-3 py-2 bg-surface border border-line rounded-md text-ink text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-50"
           />
           {errors.name && (
-            <p className="mt-1 text-xs text-red-400">{errors.name.message}</p>
+            <p className="mt-1 text-2xs text-danger">{errors.name.message}</p>
           )}
         </div>
 
         {/* Description */}
         <div>
-          <label htmlFor="settings-project-description" className="block text-sm font-medium text-slate-300 mb-1">
+          <label htmlFor="settings-project-description" className="block text-xs font-medium text-ink-2 mb-1">
             Description
           </label>
           <textarea
@@ -155,23 +155,23 @@ export const ProjectSettingsView: React.FC<ProjectSettingsViewProps> = ({
             rows={4}
             disabled={!canEdit || updateMutation.isPending}
             {...register('description')}
-            className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-md text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent placeholder-slate-500 resize-none disabled:opacity-50"
+            className="w-full px-3 py-2 bg-surface border border-line rounded-md text-ink text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent placeholder:text-muted resize-none disabled:opacity-50"
           />
           {errors.description && (
-            <p className="mt-1 text-xs text-red-400">{errors.description.message}</p>
+            <p className="mt-1 text-2xs text-danger">{errors.description.message}</p>
           )}
         </div>
 
         {canEdit && (
-          <div className="flex justify-end pt-4 border-t border-slate-800">
+          <div className="flex justify-end pt-3.5 border-t border-line">
             <button
               type="submit"
               disabled={!isDirty || updateMutation.isPending}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 rounded-md transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium text-surface bg-ink hover:bg-ink/90 active:bg-ink rounded-md shadow-sm transition-colors disabled:opacity-50"
             >
               {updateMutation.isPending ? (
                 <>
-                  <LoadingSpinner size="sm" />
+                  <LoadingSpinner size="sm" className="text-surface" />
                   <span>Saving...</span>
                 </>
               ) : (
@@ -184,18 +184,18 @@ export const ProjectSettingsView: React.FC<ProjectSettingsViewProps> = ({
 
       {/* Danger Zone: Archive Project */}
       {canArchive && (
-        <div className="bg-red-950/20 border border-red-900/40 rounded-xl p-6 space-y-4">
-          <div className="flex items-center gap-2 text-sm font-semibold text-red-400">
+        <div className="bg-danger-soft/20 border border-danger/25 rounded-lg p-6 space-y-3">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-danger">
             <AlertTriangle className="w-4 h-4" />
             <span>Danger Zone</span>
           </div>
-          <p className="text-sm text-slate-300">
+          <p className="text-xs text-muted leading-relaxed">
             Archiving a project soft-deletes it. All tasks and comments will be preserved in the database for compliance and audit retention (§8.14), but the project will no longer be visible or accessible to members.
           </p>
           <button
             type="button"
             onClick={() => setIsArchiveModalOpen(true)}
-            className="px-4 py-2 text-sm font-medium text-red-200 bg-red-600/30 hover:bg-red-600/50 border border-red-500/40 rounded-md transition-colors"
+            className="px-3.5 py-1.5 text-xs font-medium text-surface bg-danger hover:bg-danger/90 rounded-md shadow-sm transition-colors"
           >
             Archive Project
           </button>
@@ -205,28 +205,28 @@ export const ProjectSettingsView: React.FC<ProjectSettingsViewProps> = ({
       {/* Archive Confirmation Dialog */}
       {isArchiveModalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay/50 backdrop-blur-xs"
           role="dialog"
           aria-modal="true"
         >
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-xl shadow-2xl p-6 text-slate-100">
-            <h3 className="text-lg font-semibold text-red-400 flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-red-400" />
+          <div className="w-full max-w-md bg-surface border border-line rounded-lg shadow-modal p-6 text-ink">
+            <h3 className="text-sm font-semibold text-danger flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-danger" />
               Archive Project [{project.key}]
             </h3>
-            <p className="mt-3 text-sm text-slate-300">
-              Are you sure you want to archive <strong>{project.name}</strong>?
+            <p className="mt-3 text-xs text-ink-2">
+              Are you sure you want to archive <strong className="text-ink">{project.name}</strong>?
             </p>
-            <p className="mt-2 text-xs text-slate-400">
+            <p className="mt-1.5 text-2xs text-muted">
               Tasks and comments remain securely preserved in the database per §8.14, but access will be revoked for all members.
             </p>
 
-            <div className="flex justify-end gap-3 mt-6">
+            <div className="flex justify-end gap-2.5 mt-5 pt-3 border-t border-line">
               <button
                 type="button"
                 onClick={() => setIsArchiveModalOpen(false)}
                 disabled={archiveMutation.isPending}
-                className="px-4 py-2 text-sm text-slate-300 hover:text-slate-100 hover:bg-slate-800 rounded-md transition-colors"
+                className="px-3 py-1.5 text-xs font-medium text-muted hover:text-ink rounded-md transition-colors"
               >
                 Cancel
               </button>
@@ -234,11 +234,11 @@ export const ProjectSettingsView: React.FC<ProjectSettingsViewProps> = ({
                 type="button"
                 onClick={handleArchive}
                 disabled={archiveMutation.isPending}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-500 rounded-md transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium text-surface bg-danger hover:bg-danger/90 rounded-md shadow-sm transition-colors disabled:opacity-50"
               >
                 {archiveMutation.isPending ? (
                   <>
-                    <LoadingSpinner size="sm" />
+                    <LoadingSpinner size="sm" className="text-surface" />
                     <span>Archiving...</span>
                   </>
                 ) : (

@@ -68,7 +68,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
       {serverError && (
         <div
           role="alert"
-          className="p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md dark:bg-red-950/40 dark:border-red-900/60 dark:text-red-300"
+          className="p-3 text-xs text-danger bg-danger-soft border border-danger/25 rounded-md"
         >
           {serverError}
         </div>
@@ -77,7 +77,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
       <div>
         <label
           htmlFor="email"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          className="block text-xs font-medium text-ink-2 mb-1"
         >
           Email address
         </label>
@@ -89,11 +89,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
           {...register('email')}
           aria-invalid={!!errors.email}
           aria-describedby={errors.email ? 'email-error' : undefined}
-          className="w-full px-3 py-2 border rounded-md text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:opacity-50"
+          className="w-full px-3 py-1.5 border rounded-md text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent border-line bg-surface text-ink disabled:opacity-50 placeholder:text-faint"
           placeholder="name@example.com"
         />
         {errors.email && (
-          <p id="email-error" className="mt-1 text-xs text-red-600 dark:text-red-400">
+          <p id="email-error" className="mt-1 text-xs text-danger">
             {errors.email.message}
           </p>
         )}
@@ -102,9 +102,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
       <div>
         <label
           htmlFor="name"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          className="block text-xs font-medium text-ink-2 mb-1"
         >
-          Full name <span className="text-gray-400 font-normal">(optional)</span>
+          Full name <span className="text-muted font-normal">(optional)</span>
         </label>
         <input
           id="name"
@@ -113,11 +113,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
           disabled={isSubmitting}
           {...register('name')}
           aria-invalid={!!errors.name}
-          className="w-full px-3 py-2 border rounded-md text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:opacity-50"
+          className="w-full px-3 py-1.5 border rounded-md text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent border-line bg-surface text-ink disabled:opacity-50 placeholder:text-faint"
           placeholder="Ada Lovelace"
         />
         {errors.name && (
-          <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+          <p className="mt-1 text-xs text-danger">
             {errors.name.message}
           </p>
         )}
@@ -126,7 +126,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
       <div>
         <label
           htmlFor="password"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          className="block text-xs font-medium text-ink-2 mb-1"
         >
           Password
         </label>
@@ -138,15 +138,15 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
           {...register('password')}
           aria-invalid={!!errors.password}
           aria-describedby={errors.password ? 'password-error' : 'password-hint'}
-          className="w-full px-3 py-2 border rounded-md text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 disabled:opacity-50"
+          className="w-full px-3 py-1.5 border rounded-md text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent border-line bg-surface text-ink disabled:opacity-50 placeholder:text-faint"
           placeholder="At least 8 characters"
         />
         {errors.password ? (
-          <p id="password-error" className="mt-1 text-xs text-red-600 dark:text-red-400">
+          <p id="password-error" className="mt-1 text-xs text-danger">
             {errors.password.message}
           </p>
         ) : (
-          <p id="password-hint" className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          <p id="password-hint" className="mt-1 text-xs text-muted">
             Must be at least 8 characters long
           </p>
         )}
@@ -155,11 +155,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full flex items-center justify-center py-2 px-4 rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-colors"
+        className="w-full flex items-center justify-center py-2 px-4 rounded-md text-sm font-medium text-surface bg-ink hover:bg-ink/90 focus:outline-none focus:ring-2 focus:ring-accent/40 disabled:opacity-50 transition-colors shadow-sm"
       >
         {isSubmitting ? (
           <>
-            <LoadingSpinner size="sm" className="mr-2 text-white" />
+            <LoadingSpinner size="sm" className="mr-2 text-surface" />
             <span>Creating account...</span>
           </>
         ) : (
@@ -167,9 +167,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
         )}
       </button>
 
-      <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-4">
+      <p className="text-center text-xs text-muted mt-4">
         Already have an account?{' '}
-        <Link to="/login" className="text-indigo-600 dark:text-indigo-400 hover:underline font-medium">
+        <Link to="/login" className="text-accent hover:text-accent-strong hover:underline font-medium">
           Sign in
         </Link>
       </p>

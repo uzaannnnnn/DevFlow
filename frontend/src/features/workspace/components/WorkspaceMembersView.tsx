@@ -12,25 +12,25 @@ const getRoleBadge = (role: WorkspaceRole) => {
   switch (role) {
     case 'owner':
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-2xs font-semibold bg-accent-soft text-accent border border-accent/25">
           <Shield className="w-3 h-3" /> Owner
         </span>
       );
     case 'admin':
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-2xs font-semibold bg-info-soft text-info border border-info/25">
           <Shield className="w-3 h-3" /> Admin
         </span>
       );
     case 'member':
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-2xs font-semibold bg-success-soft text-success border border-success/25">
           <User className="w-3 h-3" /> Member
         </span>
       );
     case 'viewer':
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-500/10 text-slate-400 border border-slate-500/20">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-2xs font-semibold bg-subtle text-muted border border-line">
           <Eye className="w-3 h-3" /> Viewer
         </span>
       );
@@ -73,7 +73,7 @@ export const WorkspaceMembersView: React.FC = () => {
 
   if (!activeWorkspace) {
     return (
-      <div className="p-8 text-center text-slate-400">
+      <div className="p-8 text-center text-muted text-xs">
         No workspace selected. Please select or create a workspace.
       </div>
     );
@@ -144,13 +144,13 @@ export const WorkspaceMembersView: React.FC = () => {
   const canManage = canManageMembers(activeRole);
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl shadow-lg p-6 text-slate-100">
+    <div className="bg-surface border border-line rounded-lg shadow-sm p-6 text-ink">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-line">
         <div>
-          <h2 className="text-xl font-bold tracking-tight">Workspace Members</h2>
-          <p className="text-sm text-slate-400 mt-1">
-            Manage members and role permissions for <span className="text-slate-200 font-semibold">{activeWorkspace.name}</span>
+          <h2 className="text-base font-semibold tracking-tight text-ink">Workspace Members</h2>
+          <p className="text-xs text-muted mt-0.5">
+            Manage members and role permissions for <span className="text-ink font-medium">{activeWorkspace.name}</span>
           </p>
         </div>
 
@@ -158,71 +158,71 @@ export const WorkspaceMembersView: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsAddDialogOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors self-start sm:self-auto"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-ink hover:bg-ink/90 active:bg-ink text-surface text-xs font-medium rounded-md shadow-sm transition-colors self-start sm:self-auto"
             data-testid="add-member-button"
           >
-            <UserPlus className="w-4 h-4" />
+            <UserPlus className="w-3.5 h-3.5" />
             <span>Add Member</span>
           </button>
         )}
       </div>
 
       {error && (
-        <div role="alert" className="mt-4 p-3 text-sm text-red-300 bg-red-950/40 border border-red-900/60 rounded-md flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+        <div role="alert" className="mt-4 p-3 text-xs text-danger bg-danger-soft border border-danger/25 rounded-md flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0 text-danger" />
           <span>{error}</span>
         </div>
       )}
 
       {/* Members Table */}
-      <div className="mt-6 overflow-x-auto">
+      <div className="mt-4 overflow-x-auto">
         {isLoading ? (
           <div className="py-12 flex justify-center items-center">
-            <LoadingSpinner size="lg" className="text-indigo-400" />
+            <LoadingSpinner size="lg" className="text-accent" />
           </div>
         ) : (
-          <table className="w-full text-left text-sm" data-testid="members-table">
+          <table className="w-full text-left text-xs" data-testid="members-table">
             <thead>
-              <tr className="border-b border-slate-800 text-slate-400 text-xs uppercase tracking-wider">
-                <th className="py-3 px-4 font-semibold">User</th>
-                <th className="py-3 px-4 font-semibold">Role</th>
-                <th className="py-3 px-4 font-semibold">Joined</th>
-                <th className="py-3 px-4 font-semibold text-right">Actions</th>
+              <tr className="border-b border-line text-muted text-2xs uppercase tracking-wider">
+                <th className="py-2.5 px-3 font-semibold">User</th>
+                <th className="py-2.5 px-3 font-semibold">Role</th>
+                <th className="py-2.5 px-3 font-semibold">Joined</th>
+                <th className="py-2.5 px-3 font-semibold text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800">
+            <tbody className="divide-y divide-line">
               {members.map((member) => {
                 const isSelf = member.user_id === user?.id;
                 const canModify = canChangeRole(activeRole, member, user?.id);
                 const canDelete = canRemoveMember(activeRole, member, user?.id);
 
                 return (
-                  <tr key={member.id} className="hover:bg-slate-800/40 transition-colors">
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-xs text-indigo-400">
+                  <tr key={member.id} className="hover:bg-subtle transition-colors">
+                    <td className="py-3 px-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-full bg-subtle border border-line flex items-center justify-center font-semibold text-2xs text-ink-2">
                           {member.name ? member.name.charAt(0).toUpperCase() : member.email.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <div className="font-medium text-slate-200 flex items-center gap-2">
+                          <div className="font-medium text-ink flex items-center gap-2">
                             <span>{member.name || member.email}</span>
                             {isSelf && (
-                              <span className="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-1.5 py-0.2 rounded font-medium">
+                              <span className="text-2xs bg-accent-soft text-accent border border-accent/25 px-1.5 py-0.2 rounded font-medium">
                                 You
                               </span>
                             )}
                           </div>
-                          <div className="text-xs text-slate-400">{member.email}</div>
+                          <div className="text-2xs text-muted">{member.email}</div>
                         </div>
                       </div>
                     </td>
 
-                    <td className="py-3.5 px-4">
+                    <td className="py-3 px-3">
                       {canModify ? (
                         <select
                           value={member.role}
                           onChange={(e) => handleRoleChange(member, e.target.value as WorkspaceRole)}
-                          className="px-2.5 py-1 text-xs font-medium rounded-md bg-slate-950 border border-slate-700 text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+                          className="px-2 py-1 text-xs font-medium rounded-md bg-surface border border-line text-ink focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent cursor-pointer"
                           aria-label={`Change role for ${member.email}`}
                           data-testid={`role-select-${member.email}`}
                         >
@@ -236,21 +236,21 @@ export const WorkspaceMembersView: React.FC = () => {
                       )}
                     </td>
 
-                    <td className="py-3.5 px-4 text-xs text-slate-400">
+                    <td className="py-3 px-3 text-2xs text-muted font-mono">
                       {new Date(member.created_at).toLocaleDateString()}
                     </td>
 
-                    <td className="py-3.5 px-4 text-right">
+                    <td className="py-3 px-3 text-right">
                       {canDelete && (
                         <button
                           type="button"
                           onClick={() => setRemovalTarget(member)}
-                          className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-colors"
+                          className="p-1.5 text-muted hover:text-danger hover:bg-danger-soft rounded-md transition-colors"
                           title={isSelf ? 'Leave Workspace' : 'Remove Member'}
                           aria-label={isSelf ? 'Leave Workspace' : `Remove ${member.email}`}
                           data-testid={`remove-member-${member.email}`}
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       )}
                     </td>
@@ -260,7 +260,7 @@ export const WorkspaceMembersView: React.FC = () => {
 
               {members.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="py-8 text-center text-slate-400">
+                  <td colSpan={4} className="py-8 text-center text-muted">
                     No members found in this workspace.
                   </td>
                 </tr>
@@ -280,27 +280,27 @@ export const WorkspaceMembersView: React.FC = () => {
 
       {/* Ownership Transfer Confirmation Modal */}
       {transferTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-xl shadow-2xl p-6 text-slate-100">
-            <div className="flex items-center gap-2 pb-3 border-b border-slate-800 text-amber-400">
-              <ArrowRightLeft className="w-5 h-5" />
-              <h3 className="text-lg font-semibold text-slate-100">Transfer Workspace Ownership</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay/50 backdrop-blur-xs" role="dialog" aria-modal="true">
+          <div className="w-full max-w-md bg-surface border border-line rounded-lg shadow-modal p-6 text-ink">
+            <div className="flex items-center gap-2 pb-3 border-b border-line text-accent">
+              <ArrowRightLeft className="w-4 h-4" />
+              <h3 className="text-sm font-semibold text-ink">Transfer Workspace Ownership</h3>
             </div>
-            <div className="mt-4 text-sm text-slate-300 space-y-2">
+            <div className="mt-3.5 text-xs text-ink-2 space-y-2">
               <p>
-                Are you sure you want to transfer ownership of <strong className="text-white">{activeWorkspace.name}</strong> to{' '}
-                <strong className="text-white">{transferTarget.name || transferTarget.email}</strong>?
+                Are you sure you want to transfer ownership of <strong className="text-ink">{activeWorkspace.name}</strong> to{' '}
+                <strong className="text-ink">{transferTarget.name || transferTarget.email}</strong>?
               </p>
-              <p className="text-amber-300/90 text-xs bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-md">
+              <p className="text-accent text-2xs bg-accent-soft border border-accent/25 p-2.5 rounded-md">
                 Per approved architecture (Decision 3), ownership can only be transferred to an existing Admin. After transfer, your role will be demoted to Admin.
               </p>
             </div>
-            <div className="flex items-center justify-end gap-3 mt-6 pt-3 border-t border-slate-800">
+            <div className="flex items-center justify-end gap-2.5 mt-5 pt-3 border-t border-line">
               <button
                 type="button"
                 onClick={() => setTransferTarget(null)}
                 disabled={isTransferring}
-                className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-slate-200 transition-colors"
+                className="px-3 py-1.5 text-xs font-medium text-muted hover:text-ink transition-colors"
               >
                 Cancel
               </button>
@@ -308,10 +308,10 @@ export const WorkspaceMembersView: React.FC = () => {
                 type="button"
                 onClick={confirmTransferOwnership}
                 disabled={isTransferring}
-                className="flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-500 active:bg-amber-700 disabled:opacity-50 rounded-md shadow-sm transition-colors"
+                className="flex items-center justify-center px-3.5 py-1.5 text-xs font-medium text-surface bg-accent hover:bg-accent/90 active:bg-accent disabled:opacity-50 rounded-md shadow-sm transition-colors"
                 data-testid="confirm-transfer-button"
               >
-                {isTransferring ? <LoadingSpinner size="sm" className="mr-2 text-white" /> : null}
+                {isTransferring ? <LoadingSpinner size="sm" className="mr-2 text-surface" /> : null}
                 Transfer Ownership
               </button>
             </div>
@@ -321,29 +321,29 @@ export const WorkspaceMembersView: React.FC = () => {
 
       {/* Member Removal Confirmation Modal */}
       {removalTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-xl shadow-2xl p-6 text-slate-100">
-            <div className="flex items-center gap-2 pb-3 border-b border-slate-800 text-red-400">
-              <Trash2 className="w-5 h-5" />
-              <h3 className="text-lg font-semibold text-slate-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay/50 backdrop-blur-xs" role="dialog" aria-modal="true">
+          <div className="w-full max-w-md bg-surface border border-line rounded-lg shadow-modal p-6 text-ink">
+            <div className="flex items-center gap-2 pb-3 border-b border-line text-danger">
+              <Trash2 className="w-4 h-4" />
+              <h3 className="text-sm font-semibold text-ink">
                 {removalTarget.user_id === user?.id ? 'Leave Workspace' : 'Remove Member'}
               </h3>
             </div>
-            <div className="mt-4 text-sm text-slate-300">
+            <div className="mt-3.5 text-xs text-ink-2">
               {removalTarget.user_id === user?.id ? (
                 <p>Are you sure you want to leave this workspace? You will lose access to all its projects and tasks.</p>
               ) : (
                 <p>
-                  Are you sure you want to remove <strong className="text-white">{removalTarget.name || removalTarget.email}</strong> from this workspace? Any tasks assigned to them will be unassigned automatically.
+                  Are you sure you want to remove <strong className="text-ink">{removalTarget.name || removalTarget.email}</strong> from this workspace? Any tasks assigned to them will be unassigned automatically.
                 </p>
               )}
             </div>
-            <div className="flex items-center justify-end gap-3 mt-6 pt-3 border-t border-slate-800">
+            <div className="flex items-center justify-end gap-2.5 mt-5 pt-3 border-t border-line">
               <button
                 type="button"
                 onClick={() => setRemovalTarget(null)}
                 disabled={isRemoving}
-                className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-slate-200 transition-colors"
+                className="px-3 py-1.5 text-xs font-medium text-muted hover:text-ink transition-colors"
               >
                 Cancel
               </button>
@@ -351,10 +351,10 @@ export const WorkspaceMembersView: React.FC = () => {
                 type="button"
                 onClick={confirmRemoveMember}
                 disabled={isRemoving}
-                className="flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-500 active:bg-red-700 disabled:opacity-50 rounded-md shadow-sm transition-colors"
+                className="flex items-center justify-center px-3.5 py-1.5 text-xs font-medium text-surface bg-danger hover:bg-danger/90 active:bg-danger disabled:opacity-50 rounded-md shadow-sm transition-colors"
                 data-testid="confirm-remove-button"
               >
-                {isRemoving ? <LoadingSpinner size="sm" className="mr-2 text-white" /> : null}
+                {isRemoving ? <LoadingSpinner size="sm" className="mr-2 text-surface" /> : null}
                 {removalTarget.user_id === user?.id ? 'Leave Workspace' : 'Remove Member'}
               </button>
             </div>

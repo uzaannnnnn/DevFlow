@@ -46,22 +46,22 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay/50 backdrop-blur-xs"
       role="dialog"
       aria-modal="true"
       aria-labelledby="delete-task-title"
     >
-      <div className="relative w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between border-b border-slate-800 px-6 py-4">
+      <div className="relative w-full max-w-md rounded-lg bg-surface border border-line shadow-modal overflow-hidden text-ink">
+        <div className="flex items-center justify-between border-b border-line px-6 py-3.5">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20">
-              <AlertTriangle className="w-5 h-5" />
+            <div className="p-1.5 rounded-md bg-danger-soft text-danger border border-danger/25">
+              <AlertTriangle className="w-4 h-4" />
             </div>
             <div>
-              <h2 id="delete-task-title" className="text-base font-semibold text-white">
+              <h2 id="delete-task-title" className="text-sm font-semibold text-ink">
                 Delete Task
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-2xs text-muted">
                 Confirm task soft-deletion.
               </p>
             </div>
@@ -69,11 +69,11 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"
+            className="p-1 rounded-md text-muted hover:text-ink transition-colors"
             aria-label="Close dialog"
             data-testid="close-delete-task-modal"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -81,43 +81,43 @@ export const DeleteTaskModal: React.FC<DeleteTaskModalProps> = ({
           {serverError && (
             <div
               role="alert"
-              className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs"
+              className="p-3 rounded-md bg-danger-soft border border-danger/25 text-danger text-xs"
               data-testid="delete-task-error"
             >
               {serverError}
             </div>
           )}
 
-          <div className="text-sm text-slate-300 space-y-2">
+          <div className="text-xs text-ink-2 space-y-2">
             <p>
               Are you sure you want to delete task{' '}
-              <strong className="font-mono text-indigo-400 font-semibold">{task.identifier}</strong> (
-              <span className="text-white font-medium">{task.title}</span>)?
+              <strong className="font-mono text-accent font-semibold">{task.identifier}</strong> (
+              <span className="text-ink font-medium">{task.title}</span>)?
             </p>
-            <p className="text-xs text-slate-400 bg-slate-950/60 p-3 rounded-lg border border-slate-800">
+            <p className="text-2xs text-muted bg-subtle/50 p-3 rounded-md border border-line leading-relaxed">
               This task will be soft-deleted and removed from active views. Activity history and audit logs will be permanently retained.
             </p>
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+          <div className="flex items-center justify-end gap-2.5 pt-3.5 border-t border-line">
             <button
               type="button"
               onClick={onClose}
               disabled={deleteMutation.isPending}
-              className="px-4 py-2 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+              className="px-3.5 py-1.5 rounded-md text-xs font-medium text-muted hover:text-ink transition-colors"
             >
               Cancel
             </button>
             <button
-              type="button"
+              type="submit"
               onClick={handleDelete}
               disabled={deleteMutation.isPending}
-              className="px-4 py-2 rounded-lg text-xs font-medium bg-rose-600 text-white hover:bg-rose-500 disabled:opacity-50 disabled:pointer-events-none transition-colors flex items-center gap-2 shadow-lg shadow-rose-600/20"
+              className="px-3.5 py-1.5 rounded-md text-xs font-medium bg-danger text-surface hover:bg-danger/90 disabled:opacity-50 disabled:pointer-events-none transition-colors flex items-center gap-1.5 shadow-sm"
               data-testid="confirm-delete-task-button"
             >
               {deleteMutation.isPending ? (
                 <>
-                  <LoadingSpinner size="sm" />
+                  <LoadingSpinner size="sm" className="text-surface" />
                   <span>Deleting...</span>
                 </>
               ) : (

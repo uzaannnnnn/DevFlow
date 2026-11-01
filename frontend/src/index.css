@@ -2,3 +2,78 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * DevFlow design tokens.
+ * Warm neutral "paper" surfaces, ink-black primary actions and a single
+ * restrained vermilion accent reserved for focus, selection and brand.
+ * Values are RGB channels so Tailwind opacity modifiers work (e.g. bg-ink/90).
+ */
+@layer base {
+  :root {
+    --canvas: 247 246 243;
+    --surface: 255 255 255;
+    --subtle: 241 240 236;
+    --line: 229 227 221;
+    --line-strong: 210 207 199;
+    --ink: 28 27 25;
+    --ink-2: 68 66 61;
+    --muted: 112 109 102;
+    --faint: 150 146 138;
+    --overlay: 28 27 25;
+
+    --accent: 214 72 32;
+    --accent-strong: 178 56 22;
+    --accent-soft: 252 238 232;
+
+    --danger: 196 43 43;
+    --danger-soft: 253 237 236;
+    --success: 30 122 78;
+    --success-soft: 232 245 237;
+    --warning: 168 108 0;
+    --warning-soft: 252 244 224;
+    --info: 37 99 199;
+    --info-soft: 234 241 252;
+    --review: 117 72 196;
+    --review-soft: 242 237 251;
+
+    color-scheme: light;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-canvas text-ink font-sans text-sm;
+    font-feature-settings: 'cv11', 'ss01', 'tnum' 0;
+  }
+
+  ::selection {
+    background: rgb(var(--accent) / 0.18);
+  }
+
+  :focus-visible {
+    outline: 2px solid rgb(var(--accent) / 0.55);
+    outline-offset: 2px;
+  }
+
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: none;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--line-strong)) transparent;
+  }
+}
+
+@layer components {
+  /* Small uppercase label used for section headings and metadata keys. */
+  .eyebrow {
+    @apply text-2xs font-medium uppercase tracking-[0.08em] text-muted;
+  }
+}

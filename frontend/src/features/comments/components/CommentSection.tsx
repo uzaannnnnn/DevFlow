@@ -47,53 +47,53 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ taskId }) => {
   };
 
   return (
-    <div className="space-y-4 pt-4 border-t border-slate-800" data-testid="comment-section">
+    <div className="space-y-3.5 pt-4 border-t border-line" data-testid="comment-section">
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-          <MessageSquare className="w-3.5 h-3.5 text-indigo-400" />
+        <h3 className="text-2xs font-semibold text-muted uppercase tracking-wider flex items-center gap-1.5">
+          <MessageSquare className="w-3.5 h-3.5 text-accent" />
           <span>Comments ({comments.length})</span>
         </h3>
       </div>
 
       {/* Comment List */}
       {isLoading ? (
-        <div className="py-6 flex flex-col items-center justify-center gap-2 text-slate-400">
+        <div className="py-6 flex flex-col items-center justify-center gap-2 text-muted">
           <LoadingSpinner size="sm" />
           <span className="text-xs">Loading comments...</span>
         </div>
       ) : error ? (
-        <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center gap-2">
+        <div className="p-3 rounded-md bg-danger-soft border border-danger/25 text-danger text-xs flex items-center gap-2">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>Failed to load comments</span>
         </div>
       ) : comments.length === 0 ? (
-        <div className="py-6 text-center text-xs text-slate-500 italic bg-slate-950/20 rounded-xl border border-slate-800/40">
+        <div className="py-6 text-center text-2xs text-muted italic bg-subtle/40 rounded-md border border-line">
           No comments yet. Start the conversation!
         </div>
       ) : (
-        <div className="space-y-3 max-h-60 overflow-y-auto pr-1" data-testid="comment-list">
+        <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1" data-testid="comment-list">
           {comments.map((comment) => (
             <div
               key={comment.id}
-              className="p-3 rounded-xl bg-slate-950/40 border border-slate-800/80 space-y-1.5"
+              className="p-3 rounded-md bg-subtle/50 border border-line space-y-1.5"
               data-testid={`comment-item-${comment.id}`}
             >
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-full bg-indigo-600/30 text-indigo-300 flex items-center justify-center text-[10px] font-bold">
+                  <div className="w-5 h-5 rounded-full bg-surface border border-line text-ink flex items-center justify-center text-2xs font-bold">
                     {comment.author.name
                       ? comment.author.name[0].toUpperCase()
                       : comment.author.email[0].toUpperCase()}
                   </div>
-                  <span className="font-medium text-slate-200">
+                  <span className="font-medium text-ink">
                     {comment.author.name || comment.author.email}
                   </span>
                 </div>
-                <span className="text-[11px] text-slate-500">
+                <span className="text-2xs text-muted font-mono">
                   {formatTimestamp(comment.created_at)}
                 </span>
               </div>
-              <p className="text-xs text-slate-300 whitespace-pre-wrap pl-7">
+              <p className="text-xs text-ink-2 whitespace-pre-wrap pl-7">
                 {comment.body}
               </p>
             </div>
@@ -104,7 +104,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ taskId }) => {
       {/* Add Comment Form */}
       <form onSubmit={handleSubmit} className="space-y-2 pt-2" data-testid="add-comment-form">
         {validationError && (
-          <p className="text-xs text-rose-400">{validationError}</p>
+          <p className="text-2xs text-danger">{validationError}</p>
         )}
         <div className="relative">
           <textarea
@@ -115,18 +115,18 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ taskId }) => {
             }}
             placeholder="Write a comment..."
             rows={2}
-            className="w-full px-3 py-2 pr-12 rounded-xl bg-slate-950/60 border border-slate-800 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none"
+            className="w-full px-3 py-2 pr-12 rounded-md bg-surface border border-line text-xs text-ink placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent resize-none"
             data-testid="comment-input"
           />
           <button
             type="submit"
             disabled={createMutation.isPending || !commentBody.trim()}
-            className="absolute right-2.5 bottom-3.5 p-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-40 disabled:hover:bg-indigo-600 transition-colors"
+            className="absolute right-2 bottom-2.5 p-1.5 rounded-md bg-ink text-surface hover:bg-ink/90 active:bg-ink disabled:opacity-40 transition-colors"
             title="Post comment"
             data-testid="submit-comment-button"
           >
             {createMutation.isPending ? (
-              <LoadingSpinner size="sm" />
+              <LoadingSpinner size="sm" className="text-surface" />
             ) : (
               <Send className="w-3.5 h-3.5" />
             )}

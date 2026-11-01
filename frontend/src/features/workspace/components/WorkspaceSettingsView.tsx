@@ -87,30 +87,30 @@ export const WorkspaceSettingsView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 text-slate-100 max-w-3xl">
+    <div className="space-y-6 text-ink max-w-3xl">
       {/* General Settings */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl shadow-lg p-6">
-        <div className="flex items-center gap-2 pb-4 border-b border-slate-800">
-          <Settings className="w-5 h-5 text-indigo-400" />
-          <h2 className="text-xl font-bold tracking-tight">Workspace Settings</h2>
+      <div className="bg-surface border border-line rounded-lg shadow-sm p-6">
+        <div className="flex items-center gap-2 pb-4 border-b border-line">
+          <Settings className="w-4 h-4 text-accent" />
+          <h2 className="text-base font-semibold tracking-tight text-ink">Workspace Settings</h2>
         </div>
 
         {successMessage && (
-          <div className="mt-4 p-3 text-sm text-emerald-300 bg-emerald-950/40 border border-emerald-900/60 rounded-md flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+          <div className="mt-4 p-3 text-xs text-success bg-success-soft border border-success/25 rounded-md flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 shrink-0 text-success" />
             <span>{successMessage}</span>
           </div>
         )}
 
         {serverError && (
-          <div className="mt-4 p-3 text-sm text-red-300 bg-red-950/40 border border-red-900/60 rounded-md">
+          <div className="mt-4 p-3 text-xs text-danger bg-danger-soft border border-danger/25 rounded-md">
             {serverError}
           </div>
         )}
 
-        <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4" noValidate>
+        <form onSubmit={handleSubmit(onSubmit)} className="mt-5 space-y-4" noValidate>
           <div>
-            <label htmlFor="ws-name-setting" className="block text-sm font-medium text-slate-300">
+            <label htmlFor="ws-name-setting" className="block text-xs font-medium text-ink-2">
               Workspace Name
             </label>
             <input
@@ -118,28 +118,28 @@ export const WorkspaceSettingsView: React.FC = () => {
               type="text"
               disabled={!canEdit}
               {...register('name')}
-              className="mt-1 block w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-md text-sm text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="mt-1 block w-full px-3 py-2 bg-surface border border-line rounded-md text-xs text-ink disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-subtle/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             />
             {errors.name && (
-              <p className="mt-1 text-xs text-red-400">{errors.name.message}</p>
+              <p className="mt-1 text-2xs text-danger">{errors.name.message}</p>
             )}
           </div>
 
           <div>
-            <label htmlFor="ws-slug-readonly" className="block text-sm font-medium text-slate-300">
-              Workspace Slug <span className="text-xs text-slate-500">(Permanent Identifier)</span>
+            <label htmlFor="ws-slug-readonly" className="block text-xs font-medium text-ink-2">
+              Workspace Slug <span className="text-2xs text-muted">(Permanent Identifier)</span>
             </label>
             <input
               id="ws-slug-readonly"
               type="text"
               value={activeWorkspace.slug}
               readOnly
-              className="mt-1 block w-full px-3 py-2 bg-slate-950/60 border border-slate-800/80 rounded-md text-sm text-slate-400 cursor-not-allowed"
+              className="mt-1 block w-full px-3 py-2 bg-subtle/60 border border-line rounded-md text-xs font-mono text-muted cursor-not-allowed"
             />
           </div>
 
           <div>
-            <label htmlFor="ws-desc-setting" className="block text-sm font-medium text-slate-300">
+            <label htmlFor="ws-desc-setting" className="block text-xs font-medium text-ink-2">
               Description
             </label>
             <textarea
@@ -147,10 +147,10 @@ export const WorkspaceSettingsView: React.FC = () => {
               rows={3}
               disabled={!canEdit}
               {...register('description')}
-              className="mt-1 block w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-md text-sm text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+              className="mt-1 block w-full px-3 py-2 bg-surface border border-line rounded-md text-xs text-ink disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-subtle/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent resize-none"
             />
             {errors.description && (
-              <p className="mt-1 text-xs text-red-400">{errors.description.message}</p>
+              <p className="mt-1 text-2xs text-danger">{errors.description.message}</p>
             )}
           </div>
 
@@ -159,10 +159,10 @@ export const WorkspaceSettingsView: React.FC = () => {
               <button
                 type="submit"
                 disabled={isSubmitting || !isDirty}
-                className="flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-md shadow-sm transition-colors"
+                className="flex items-center justify-center px-3.5 py-1.5 text-xs font-medium text-surface bg-ink hover:bg-ink/90 active:bg-ink disabled:opacity-50 disabled:cursor-not-allowed rounded-md shadow-sm transition-colors"
                 data-testid="save-settings-button"
               >
-                {isSubmitting ? <LoadingSpinner size="sm" className="mr-2 text-white" /> : null}
+                {isSubmitting ? <LoadingSpinner size="sm" className="mr-2 text-surface" /> : null}
                 Save Changes
               </button>
             </div>
@@ -172,22 +172,22 @@ export const WorkspaceSettingsView: React.FC = () => {
 
       {/* Danger Zone: Soft Delete Workspace (Owner Only) */}
       {canDelete && (
-        <div className="bg-red-950/20 border border-red-900/40 rounded-xl p-6">
-          <div className="flex items-center gap-2 pb-3 border-b border-red-900/40 text-red-400">
-            <AlertTriangle className="w-5 h-5" />
-            <h3 className="text-lg font-bold">Danger Zone</h3>
+        <div className="bg-danger-soft/20 border border-danger/25 rounded-lg p-6">
+          <div className="flex items-center gap-2 pb-3 border-b border-danger/20 text-danger">
+            <AlertTriangle className="w-4 h-4" />
+            <h3 className="text-sm font-semibold text-danger">Danger Zone</h3>
           </div>
           <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h4 className="text-sm font-semibold text-slate-200">Delete this workspace</h4>
-              <p className="text-xs text-slate-400 mt-1">
+              <h4 className="text-xs font-semibold text-ink">Delete this workspace</h4>
+              <p className="text-2xs text-muted mt-0.5">
                 Once deleted, this workspace and all associated projects and tasks will be soft-deleted. Only the workspace Owner can perform this action.
               </p>
             </div>
             <button
               type="button"
               onClick={() => setShowDeleteModal(true)}
-              className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-500 active:bg-red-700 rounded-lg shadow-sm transition-colors shrink-0"
+              className="px-3.5 py-1.5 text-xs font-medium text-surface bg-danger hover:bg-danger/90 active:bg-danger rounded-md shadow-sm transition-colors shrink-0"
               data-testid="delete-workspace-button"
             >
               Delete Workspace
@@ -198,29 +198,29 @@ export const WorkspaceSettingsView: React.FC = () => {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-xl shadow-2xl p-6 text-slate-100">
-            <div className="flex items-center gap-2 pb-3 border-b border-slate-800 text-red-400">
-              <Trash2 className="w-5 h-5" />
-              <h3 className="text-lg font-semibold text-slate-100">Delete Workspace</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay/50 backdrop-blur-xs" role="dialog" aria-modal="true">
+          <div className="w-full max-w-md bg-surface border border-line rounded-lg shadow-modal p-6 text-ink">
+            <div className="flex items-center gap-2 pb-3 border-b border-line text-danger">
+              <Trash2 className="w-4 h-4" />
+              <h3 className="text-sm font-semibold text-ink">Delete Workspace</h3>
             </div>
-            <div className="mt-4 text-sm text-slate-300 space-y-3">
+            <div className="mt-3.5 text-xs text-ink-2 space-y-3">
               <p>
-                Are you sure you want to delete <strong className="text-white">{activeWorkspace.name}</strong>?
+                Are you sure you want to delete <strong className="text-ink">{activeWorkspace.name}</strong>?
               </p>
-              <p className="text-xs text-slate-400">
-                To confirm deletion, please type the workspace name (<strong className="text-white">{activeWorkspace.name}</strong>) below:
+              <p className="text-2xs text-muted">
+                To confirm deletion, please type the workspace name (<strong className="text-ink">{activeWorkspace.name}</strong>) below:
               </p>
               <input
                 type="text"
                 value={confirmName}
                 onChange={(e) => setConfirmName(e.target.value)}
                 placeholder={activeWorkspace.name}
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-md text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 py-2 bg-surface border border-line rounded-md text-xs text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger"
                 data-testid="confirm-delete-input"
               />
             </div>
-            <div className="flex items-center justify-end gap-3 mt-6 pt-3 border-t border-slate-800">
+            <div className="flex items-center justify-end gap-2.5 mt-5 pt-3 border-t border-line">
               <button
                 type="button"
                 onClick={() => {
@@ -228,7 +228,7 @@ export const WorkspaceSettingsView: React.FC = () => {
                   setConfirmName('');
                 }}
                 disabled={isDeleting}
-                className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-slate-200 transition-colors"
+                className="px-3 py-1.5 text-xs font-medium text-muted hover:text-ink transition-colors"
               >
                 Cancel
               </button>
@@ -236,10 +236,10 @@ export const WorkspaceSettingsView: React.FC = () => {
                 type="button"
                 onClick={handleDelete}
                 disabled={isDeleting || confirmName !== activeWorkspace.name}
-                className="flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-500 active:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed rounded-md shadow-sm transition-colors"
+                className="flex items-center justify-center px-3.5 py-1.5 text-xs font-medium text-surface bg-danger hover:bg-danger/90 active:bg-danger disabled:opacity-40 disabled:cursor-not-allowed rounded-md shadow-sm transition-colors"
                 data-testid="confirm-delete-button"
               >
-                {isDeleting ? <LoadingSpinner size="sm" className="mr-2 text-white" /> : null}
+                {isDeleting ? <LoadingSpinner size="sm" className="mr-2 text-surface" /> : null}
                 I understand, delete workspace
               </button>
             </div>

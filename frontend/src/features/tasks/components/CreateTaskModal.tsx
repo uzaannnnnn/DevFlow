@@ -96,23 +96,23 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay/50 backdrop-blur-xs"
       role="dialog"
       aria-modal="true"
       aria-labelledby="create-task-title"
     >
-      <div className="relative w-full max-w-lg rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-lg rounded-lg bg-surface border border-line shadow-modal overflow-hidden text-ink">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-800 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-line px-6 py-3.5">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-              <CheckSquare className="w-5 h-5" />
+            <div className="p-1.5 rounded-md bg-subtle text-accent border border-line">
+              <CheckSquare className="w-4 h-4" />
             </div>
             <div>
-              <h2 id="create-task-title" className="text-base font-semibold text-white">
+              <h2 id="create-task-title" className="text-sm font-semibold text-ink">
                 Create New Task
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-2xs text-muted">
                 Add a work item to this project.
               </p>
             </div>
@@ -120,11 +120,11 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
           <button
             type="button"
             onClick={handleClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"
+            className="p-1 rounded-md text-muted hover:text-ink transition-colors"
             aria-label="Close dialog"
             data-testid="close-create-task-modal"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -133,7 +133,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
           {serverError && (
             <div
               role="alert"
-              className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs"
+              className="p-3 rounded-md bg-danger-soft border border-danger/25 text-danger text-xs"
               data-testid="create-task-error"
             >
               {serverError}
@@ -141,49 +141,49 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
           )}
 
           {/* Title Field */}
-          <div className="space-y-1.5">
-            <label htmlFor="task-title" className="block text-xs font-medium text-slate-300">
-              Title <span className="text-rose-400">*</span>
+          <div className="space-y-1">
+            <label htmlFor="task-title" className="block text-xs font-medium text-ink-2">
+              Title <span className="text-danger">*</span>
             </label>
             <input
               id="task-title"
               type="text"
               placeholder="e.g. Implement user authentication"
-              className={`w-full px-3.5 py-2 rounded-lg bg-slate-950 border text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-colors ${
-                errors.title ? 'border-rose-500/50' : 'border-slate-800 focus:border-indigo-500'
+              className={`w-full px-3 py-2 rounded-md bg-surface border text-xs text-ink placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors ${
+                errors.title ? 'border-danger/50' : 'border-line'
               }`}
               data-testid="task-title-input"
               {...register('title')}
             />
             {errors.title && (
-              <p className="text-xs text-rose-400">{errors.title.message}</p>
+              <p className="text-2xs text-danger">{errors.title.message}</p>
             )}
           </div>
 
           {/* Description Field */}
-          <div className="space-y-1.5">
-            <label htmlFor="task-description" className="block text-xs font-medium text-slate-300">
+          <div className="space-y-1">
+            <label htmlFor="task-description" className="block text-xs font-medium text-ink-2">
               Description
             </label>
             <textarea
               id="task-description"
               rows={3}
               placeholder="Add details, acceptance criteria, or technical notes..."
-              className="w-full px-3.5 py-2 rounded-lg bg-slate-950 border border-slate-800 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-colors resize-none"
+              className="w-full px-3 py-2 rounded-md bg-surface border border-line text-xs text-ink placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors resize-none"
               data-testid="task-description-input"
               {...register('description')}
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             {/* Status Field */}
-            <div className="space-y-1.5">
-              <label htmlFor="task-status" className="block text-xs font-medium text-slate-300">
+            <div className="space-y-1">
+              <label htmlFor="task-status" className="block text-xs font-medium text-ink-2">
                 Status
               </label>
               <select
                 id="task-status"
-                className="w-full px-3.5 py-2 rounded-lg bg-slate-950 border border-slate-800 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-colors"
+                className="w-full px-3 py-2 rounded-md bg-surface border border-line text-xs text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors"
                 data-testid="task-status-select"
                 {...register('status')}
               >
@@ -195,13 +195,13 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
             </div>
 
             {/* Priority Field */}
-            <div className="space-y-1.5">
-              <label htmlFor="task-priority" className="block text-xs font-medium text-slate-300">
+            <div className="space-y-1">
+              <label htmlFor="task-priority" className="block text-xs font-medium text-ink-2">
                 Priority
               </label>
               <select
                 id="task-priority"
-                className="w-full px-3.5 py-2 rounded-lg bg-slate-950 border border-slate-800 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-colors"
+                className="w-full px-3 py-2 rounded-md bg-surface border border-line text-xs text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors"
                 data-testid="task-priority-select"
                 {...register('priority')}
               >
@@ -213,15 +213,15 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             {/* Assignee Field */}
-            <div className="space-y-1.5">
-              <label htmlFor="task-assignee" className="block text-xs font-medium text-slate-300">
+            <div className="space-y-1">
+              <label htmlFor="task-assignee" className="block text-xs font-medium text-ink-2">
                 Assignee
               </label>
               <select
                 id="task-assignee"
-                className="w-full px-3.5 py-2 rounded-lg bg-slate-950 border border-slate-800 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-colors"
+                className="w-full px-3 py-2 rounded-md bg-surface border border-line text-xs text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors"
                 data-testid="task-assignee-select"
                 {...register('assignee_id')}
               >
@@ -235,14 +235,14 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
             </div>
 
             {/* Due Date Field */}
-            <div className="space-y-1.5">
-              <label htmlFor="task-due-date" className="block text-xs font-medium text-slate-300">
+            <div className="space-y-1">
+              <label htmlFor="task-due-date" className="block text-xs font-medium text-ink-2">
                 Due Date
               </label>
               <input
                 id="task-due-date"
                 type="date"
-                className="w-full px-3.5 py-2 rounded-lg bg-slate-950 border border-slate-800 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-colors"
+                className="w-full px-3 py-2 rounded-md bg-surface border border-line text-xs text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors"
                 data-testid="task-due-date-input"
                 {...register('due_date')}
               />
@@ -250,23 +250,23 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
           </div>
 
           {/* Footer Actions */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+          <div className="flex items-center justify-end gap-2.5 pt-3.5 border-t border-line">
             <button
               type="button"
               onClick={handleClose}
-              className="px-4 py-2 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+              className="px-3.5 py-1.5 rounded-md text-xs font-medium text-muted hover:text-ink transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={createMutation.isPending}
-              className="px-4 py-2 rounded-lg text-xs font-medium bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-50 disabled:pointer-events-none transition-colors flex items-center gap-2 shadow-lg shadow-indigo-600/20"
+              className="px-3.5 py-1.5 rounded-md text-xs font-medium bg-ink text-surface hover:bg-ink/90 active:bg-ink disabled:opacity-50 disabled:pointer-events-none transition-colors flex items-center gap-1.5 shadow-sm"
               data-testid="submit-create-task-button"
             >
               {createMutation.isPending ? (
                 <>
-                  <LoadingSpinner size="sm" />
+                  <LoadingSpinner size="sm" className="text-surface" />
                   <span>Creating...</span>
                 </>
               ) : (

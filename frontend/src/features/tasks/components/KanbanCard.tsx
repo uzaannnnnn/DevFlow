@@ -55,20 +55,20 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
       {...attributes}
       {...listeners}
       onClick={() => onSelect(task.id)}
-      className={`group relative rounded-xl border bg-slate-900/90 p-4 shadow-sm hover:shadow-md transition-all cursor-grab active:cursor-grabbing select-none ${
+      className={`group relative rounded-md border bg-surface p-3 shadow-2xs hover:shadow-pop hover:border-line-strong transition-all cursor-grab active:cursor-grabbing select-none ${
         isOverlay
-          ? 'border-indigo-500 shadow-xl shadow-indigo-500/20 rotate-2 scale-105'
-          : 'border-slate-800 hover:border-slate-700'
+          ? 'border-accent shadow-modal rotate-1 scale-105 bg-surface ring-2 ring-accent/25'
+          : 'border-line'
       }`}
       data-testid={`kanban-card-${task.id}`}
     >
       {/* Top row: Identifier and Priority */}
       <div className="flex items-center justify-between gap-2 mb-2">
-        <span className="font-mono text-xs font-semibold text-indigo-400">
+        <span className="font-mono text-2xs font-semibold text-accent">
           {task.identifier}
         </span>
         <span
-          className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium border ${priorityConfig.bg} ${priorityConfig.text} ${priorityConfig.border}`}
+          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs font-medium border ${priorityConfig.bg} ${priorityConfig.text} ${priorityConfig.border}`}
         >
           <span className={`w-1.5 h-1.5 rounded-full ${priorityConfig.dot}`} />
           {priorityConfig.label}
@@ -82,45 +82,45 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
           onSelect(task.id);
         }}
         data-testid={`kanban-card-title-${task.id}`}
-        className="text-sm font-medium text-slate-100 line-clamp-2 mb-3 group-hover:text-white cursor-pointer"
+        className="text-xs font-medium text-ink line-clamp-2 mb-2 group-hover:text-accent cursor-pointer transition-colors"
       >
         {task.title}
       </h4>
 
       {/* Footer: Due date & Assignee */}
-      <div className="flex items-center justify-between pt-2 border-t border-slate-800/60 text-xs">
+      <div className="flex items-center justify-between pt-2 border-t border-line text-2xs">
         {formattedDueDate ? (
           <span
-            className={`inline-flex items-center gap-1 text-[11px] font-medium ${
-              overdue ? 'text-rose-400 font-semibold' : 'text-slate-400'
+            className={`inline-flex items-center gap-1 text-2xs font-medium font-mono ${
+              overdue ? 'text-danger font-semibold' : 'text-muted'
             }`}
           >
-            <Calendar className="w-3.5 h-3.5" />
+            <Calendar className="w-3 h-3" />
             <span>{formattedDueDate}</span>
             {overdue && (
-              <span className="ml-1 px-1 py-0.2 rounded text-[9px] bg-rose-500/10 text-rose-400 border border-rose-500/20">
+              <span className="ml-1 px-1 py-0.2 rounded text-2xs bg-danger-soft text-danger border border-danger/25">
                 Overdue
               </span>
             )}
           </span>
         ) : (
-          <span className="text-slate-600 text-[11px] italic">No due date</span>
+          <span className="text-muted text-2xs italic">No due date</span>
         )}
 
         <div className="flex items-center gap-1.5">
           {task.assignee ? (
             <div
-              className="flex items-center gap-1 text-slate-300 bg-slate-800/80 px-2 py-0.5 rounded-full text-[11px]"
+              className="flex items-center gap-1 text-ink-2 bg-subtle border border-line px-1.5 py-0.5 rounded text-2xs"
               title={`Assigned to ${task.assignee.name || task.assignee.email}`}
             >
-              <User className="w-3 h-3 text-indigo-400" />
+              <User className="w-3 h-3 text-muted" />
               <span className="truncate max-w-[80px]">
                 {task.assignee.name || task.assignee.email.split('@')[0]}
               </span>
             </div>
           ) : (
             <span
-              className="inline-flex items-center text-slate-500 text-[11px]"
+              className="inline-flex items-center text-muted text-2xs italic"
               title="Unassigned"
             >
               <User className="w-3 h-3 mr-0.5" />

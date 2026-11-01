@@ -81,30 +81,30 @@ export const HomePage: FC = () => {
   const canManageSettings = canUpdateWorkspace(activeRole);
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-canvas text-ink flex flex-col">
       {/* Top Navigation */}
-      <header className="border-b border-slate-800 bg-slate-950/50 backdrop-blur px-6 py-4 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
+      <header className="border-b border-line bg-surface px-6 py-3 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-30">
+        <div className="flex items-center gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/20">
+            <div className="h-8 w-8 rounded-md bg-ink flex items-center justify-center font-bold text-surface text-xs tracking-wider shadow-sm">
               DF
             </div>
             <div>
-              <h1 className="text-lg font-bold tracking-tight">DevFlow</h1>
-              <p className="text-xs text-slate-400">Sprint 2 Phase 4 — Project & Task Management</p>
+              <h1 className="text-sm font-semibold tracking-tight text-ink leading-none">DevFlow</h1>
+              <p className="text-2xs font-mono text-muted mt-0.5">Project & Task Management</p>
             </div>
           </div>
 
-          <div className="h-6 w-[1px] bg-slate-800 mx-1 hidden sm:block" />
+          <div className="h-5 w-[1px] bg-line mx-1 hidden sm:block" />
 
           {/* Workspace Switcher */}
           <WorkspaceSwitcher />
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           {user && (
-            <div className="flex items-center gap-2 text-xs text-slate-300 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700">
-              <UserIcon className="h-3.5 w-3.5 text-indigo-400" />
+            <div className="flex items-center gap-2 text-xs text-ink-2 bg-subtle px-2.5 py-1 rounded-md border border-line">
+              <UserIcon className="h-3.5 w-3.5 text-muted" />
               <span className="font-medium">{user.name || user.email}</span>
             </div>
           )}
@@ -112,7 +112,7 @@ export const HomePage: FC = () => {
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md bg-surface border border-line hover:bg-subtle text-ink-2 transition-colors disabled:opacity-50"
             title="Refresh System Status"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -122,7 +122,7 @@ export const HomePage: FC = () => {
           {user && (
             <button
               onClick={() => logout()}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 transition-colors"
+              className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md bg-danger-soft hover:bg-danger-soft/80 text-danger border border-danger/25 transition-colors"
             >
               <LogOut className="h-3.5 w-3.5" />
               Sign out
@@ -133,15 +133,15 @@ export const HomePage: FC = () => {
 
       {/* Workspace Subheader Navigation */}
       {activeWorkspace && (
-        <div className="border-b border-slate-800 bg-slate-950/20 px-6">
-          <nav className="flex space-x-6 text-sm">
+        <div className="border-b border-line bg-surface/80 px-4 sm:px-6 backdrop-blur overflow-x-auto scrollbar-none">
+          <nav className="flex space-x-6 text-sm min-w-max">
             <button
               type="button"
               onClick={() => setActiveTab('overview')}
-              className={`py-3 px-1 border-b-2 font-medium flex items-center gap-2 transition-colors ${
+              className={`py-2.5 px-1 border-b-2 text-xs font-medium flex items-center gap-2 transition-colors ${
                 activeTab === 'overview'
-                  ? 'border-indigo-500 text-indigo-400'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  ? 'border-accent text-accent font-semibold'
+                  : 'border-transparent text-muted hover:text-ink'
               }`}
               data-testid="tab-overview"
             >
@@ -155,10 +155,10 @@ export const HomePage: FC = () => {
                 setSelectedProjectId(null);
                 setActiveTab('projects');
               }}
-              className={`py-3 px-1 border-b-2 font-medium flex items-center gap-2 transition-colors ${
+              className={`py-2.5 px-1 border-b-2 text-xs font-medium flex items-center gap-2 transition-colors ${
                 activeTab === 'projects'
-                  ? 'border-indigo-500 text-indigo-400'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  ? 'border-accent text-accent font-semibold'
+                  : 'border-transparent text-muted hover:text-ink'
               }`}
               data-testid="tab-projects"
             >
@@ -169,10 +169,10 @@ export const HomePage: FC = () => {
             <button
               type="button"
               onClick={() => setActiveTab('members')}
-              className={`py-3 px-1 border-b-2 font-medium flex items-center gap-2 transition-colors ${
+              className={`py-2.5 px-1 border-b-2 text-xs font-medium flex items-center gap-2 transition-colors ${
                 activeTab === 'members'
-                  ? 'border-indigo-500 text-indigo-400'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  ? 'border-accent text-accent font-semibold'
+                  : 'border-transparent text-muted hover:text-ink'
               }`}
               data-testid="tab-members"
             >
@@ -184,10 +184,10 @@ export const HomePage: FC = () => {
               <button
                 type="button"
                 onClick={() => setActiveTab('settings')}
-                className={`py-3 px-1 border-b-2 font-medium flex items-center gap-2 transition-colors ${
+                className={`py-2.5 px-1 border-b-2 text-xs font-medium flex items-center gap-2 transition-colors ${
                   activeTab === 'settings'
-                    ? 'border-indigo-500 text-indigo-400'
-                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                    ? 'border-accent text-accent font-semibold'
+                    : 'border-transparent text-muted hover:text-ink'
                 }`}
                 data-testid="tab-settings"
               >
@@ -200,21 +200,21 @@ export const HomePage: FC = () => {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 max-w-5xl w-full mx-auto p-6 md:p-8 flex flex-col gap-8">
+      <main className="flex-1 max-w-6xl w-full mx-auto p-6 md:p-8 flex flex-col gap-6">
         {/* Empty State: No Workspace */}
         {!isWsLoading && workspaces.length === 0 && (
-          <div className="text-center py-16 px-4 max-w-md mx-auto">
-            <div className="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center mx-auto mb-4 border border-indigo-500/20">
-              <Briefcase className="w-6 h-6" />
+          <div className="bg-surface border border-line rounded-lg p-8 shadow-sm text-center py-12 px-6 max-w-md mx-auto my-auto">
+            <div className="w-10 h-10 rounded-md bg-subtle text-muted flex items-center justify-center mx-auto mb-3 border border-line">
+              <Briefcase className="w-5 h-5" />
             </div>
-            <h2 className="text-xl font-bold">No Workspace Found</h2>
-            <p className="mt-2 text-sm text-slate-400">
+            <h2 className="text-base font-semibold text-ink">No Workspace Found</h2>
+            <p className="mt-1.5 text-xs text-muted leading-relaxed">
               You are not a member of any workspace yet. Create a workspace to start managing projects, tasks, and inviting team members.
             </p>
             <button
               type="button"
               onClick={() => setIsCreateModalOpen(true)}
-              className="mt-6 inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors"
+              className="mt-5 inline-flex items-center gap-2 px-3.5 py-2 bg-ink hover:bg-ink/90 active:bg-ink text-surface text-xs font-medium rounded-md shadow-sm transition-colors"
               data-testid="create-first-workspace-button"
             >
               <Plus className="w-4 h-4" />
@@ -262,8 +262,8 @@ export const HomePage: FC = () => {
       />
 
       {/* Footer */}
-      <footer className="border-t border-slate-800/60 py-4 text-center text-xs text-slate-500">
-        DevFlow — Sprint 2 Phase 4 Verified Task Management Engine
+      <footer className="border-t border-line py-4 text-center text-2xs text-muted font-mono">
+        DevFlow — Task & Project Engine
       </footer>
     </div>
   );

@@ -33,15 +33,15 @@ export const ProjectActivityFeed: React.FC<ProjectActivityFeedProps> = ({ projec
     return (
       <div className="p-12 flex flex-col items-center justify-center gap-3" data-testid="activity-loading">
         <LoadingSpinner size="md" />
-        <span className="text-sm text-slate-400">Loading project activities...</span>
+        <span className="text-xs text-muted">Loading project activities...</span>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-6 bg-red-950/40 border border-red-900/60 rounded-xl text-red-300">
-        <p className="text-sm">Failed to load activity feed: {error.message}</p>
+      <div className="p-4 bg-danger-soft border border-danger/25 rounded-md text-xs text-danger">
+        <p>Failed to load activity feed: {error.message}</p>
       </div>
     );
   }
@@ -52,10 +52,10 @@ export const ProjectActivityFeed: React.FC<ProjectActivityFeedProps> = ({ projec
 
   if (activities.length === 0) {
     return (
-      <div className="p-12 text-center border border-dashed border-slate-800 rounded-xl bg-slate-950/30">
-        <Activity className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-        <p className="text-sm font-medium text-slate-400">No activity yet</p>
-        <p className="text-xs text-slate-500 mt-1">
+      <div className="p-10 text-center border border-dashed border-line rounded-lg bg-surface">
+        <Activity className="w-7 h-7 text-faint mx-auto mb-2" />
+        <p className="text-xs font-medium text-muted">No activity yet</p>
+        <p className="text-2xs text-muted mt-1">
           Actions taken on tasks in this project will appear here.
         </p>
       </div>
@@ -64,39 +64,39 @@ export const ProjectActivityFeed: React.FC<ProjectActivityFeedProps> = ({ projec
 
   return (
     <div className="space-y-4" data-testid="project-activity-feed">
-      <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-        <h3 className="text-sm font-semibold text-slate-300 flex items-center gap-2">
-          <Activity className="w-4 h-4 text-indigo-400" />
+      <div className="flex items-center justify-between pb-2 border-b border-line">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted flex items-center gap-2">
+          <Activity className="w-3.5 h-3.5 text-accent" />
           <span>Audit Trail ({total})</span>
         </h3>
         {totalPages > 1 && (
-          <div className="flex items-center gap-2 text-xs text-slate-400">
-            <span>
+          <div className="flex items-center gap-2 text-2xs text-muted">
+            <span className="font-mono">
               Page {page} of {totalPages}
             </span>
             <button
               type="button"
               disabled={page <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="p-1 rounded hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="p-1 rounded hover:bg-subtle text-muted hover:text-ink disabled:opacity-30 disabled:cursor-not-allowed"
               aria-label="Previous page"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-3.5 h-3.5" />
             </button>
             <button
               type="button"
               disabled={page >= totalPages}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              className="p-1 rounded hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="p-1 rounded hover:bg-subtle text-muted hover:text-ink disabled:opacity-30 disabled:cursor-not-allowed"
               aria-label="Next page"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
         )}
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2.5">
         {activities.map((item) => (
           <ActivityRow key={item.id} activity={item} />
         ))}
@@ -111,21 +111,21 @@ const ActivityRow: React.FC<{ activity: ActivityItem }> = ({ activity }) => {
 
   return (
     <div
-      className="p-3.5 bg-slate-900/60 border border-slate-800/80 rounded-lg flex items-start gap-3 hover:border-slate-700/60 transition-colors"
+      className="p-3 bg-surface border border-line rounded-md flex items-start gap-2.5 shadow-2xs"
       data-testid={`activity-item-${activity.id}`}
     >
       <div className="mt-0.5">{getActivityIcon(activity.action)}</div>
       <div className="flex-1 min-w-0">
-        <div className="text-xs text-slate-300 leading-relaxed">
-          <span className="font-semibold text-slate-200">{actorName}</span>{' '}
+        <div className="text-xs text-ink-2 leading-relaxed">
+          <span className="font-semibold text-ink">{actorName}</span>{' '}
           {renderActionContent(activity)}
         </div>
-        <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500">
-          <span>{timeFormatted}</span>
+        <div className="flex items-center gap-2 mt-1 text-2xs text-muted">
+          <span className="font-mono">{timeFormatted}</span>
           {activity.task_identifier && (
             <>
               <span>•</span>
-              <span className="px-1.5 py-0.5 rounded bg-slate-800 font-mono text-[10px] text-slate-400">
+              <span className="px-1.5 py-0.2 rounded bg-subtle border border-line font-mono text-2xs text-ink-2">
                 {activity.task_identifier}
               </span>
             </>
@@ -139,30 +139,30 @@ const ActivityRow: React.FC<{ activity: ActivityItem }> = ({ activity }) => {
 function getActivityIcon(action: string) {
   switch (action) {
     case 'task_created':
-      return <PlusCircle className="w-4 h-4 text-emerald-400" />;
+      return <PlusCircle className="w-3.5 h-3.5 text-success" />;
     case 'task_status_changed':
-      return <ArrowRightCircle className="w-4 h-4 text-blue-400" />;
+      return <ArrowRightCircle className="w-3.5 h-3.5 text-info" />;
     case 'task_assigned':
-      return <UserPlus className="w-4 h-4 text-indigo-400" />;
+      return <UserPlus className="w-3.5 h-3.5 text-accent" />;
     case 'task_unassigned':
-      return <UserMinus className="w-4 h-4 text-slate-400" />;
+      return <UserMinus className="w-3.5 h-3.5 text-muted" />;
     case 'task_priority_changed':
-      return <Flag className="w-4 h-4 text-amber-400" />;
+      return <Flag className="w-3.5 h-3.5 text-warning" />;
     case 'task_due_date_changed':
-      return <Calendar className="w-4 h-4 text-purple-400" />;
+      return <Calendar className="w-3.5 h-3.5 text-review" />;
     case 'comment_added':
-      return <MessageSquare className="w-4 h-4 text-teal-400" />;
+      return <MessageSquare className="w-3.5 h-3.5 text-accent" />;
     case 'task_deleted':
-      return <Trash2 className="w-4 h-4 text-red-400" />;
+      return <Trash2 className="w-3.5 h-3.5 text-danger" />;
     default:
-      return <Activity className="w-4 h-4 text-slate-400" />;
+      return <Activity className="w-3.5 h-3.5 text-muted" />;
   }
 }
 
 function renderActionContent(activity: ActivityItem) {
   const meta = activity.metadata || {};
   const taskLabel = activity.task_identifier ? (
-    <span className="font-semibold text-slate-200">{activity.task_identifier}</span>
+    <span className="font-semibold text-ink">{activity.task_identifier}</span>
   ) : (
     <span>a task</span>
   );
@@ -179,11 +179,11 @@ function renderActionContent(activity: ActivityItem) {
       return (
         <span>
           changed status of {taskLabel} from{' '}
-          <span className="text-amber-300 font-medium capitalize">
+          <span className="text-warning font-medium capitalize">
             {String(meta.old_status || '').replace('_', ' ')}
           </span>{' '}
           to{' '}
-          <span className="text-emerald-300 font-medium capitalize">
+          <span className="text-success font-medium capitalize">
             {String(meta.new_status || '').replace('_', ' ')}
           </span>
         </span>
@@ -192,16 +192,16 @@ function renderActionContent(activity: ActivityItem) {
       return (
         <span>
           changed priority of {taskLabel} from{' '}
-          <span className="text-slate-300 font-medium capitalize">{String(meta.old_priority || '')}</span>{' '}
+          <span className="text-muted font-medium capitalize">{String(meta.old_priority || '')}</span>{' '}
           to{' '}
-          <span className="text-indigo-300 font-medium capitalize">{String(meta.new_priority || '')}</span>
+          <span className="text-accent font-medium capitalize">{String(meta.new_priority || '')}</span>
         </span>
       );
     case 'task_assigned':
       return (
         <span>
           assigned {taskLabel} to{' '}
-          <span className="text-slate-200 font-semibold">{meta.assignee_name || 'a member'}</span>
+          <span className="text-ink font-semibold">{meta.assignee_name || 'a member'}</span>
         </span>
       );
     case 'task_unassigned':
