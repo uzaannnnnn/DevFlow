@@ -92,20 +92,24 @@ describe('KanbanBoard Component', () => {
     vi.mocked(taskApi.listTasks).mockResolvedValue({
       success: true,
       data: { tasks: mockTasks, total: 4 },
+      meta: null,
     });
     vi.mocked(projectApi.listMembers).mockResolvedValue({
       success: true,
       data: {
         members: [
           {
+            id: 'pm-1',
+            project_id: 'proj-1',
             user_id: 'user-1',
             email: 'alice@devflow.local',
             name: 'Alice',
             role: 'owner',
-            created_at: new Date().toISOString(),
+            joined_at: new Date().toISOString(),
           },
         ],
       },
+      meta: null,
     });
   });
 
@@ -143,6 +147,7 @@ describe('KanbanBoard Component', () => {
     vi.mocked(taskApi.getTask).mockResolvedValue({
       success: true,
       data: { task: mockTasks[0] },
+      meta: null,
     });
 
     renderWithQueryClient(<KanbanBoard project={mockProject} />);

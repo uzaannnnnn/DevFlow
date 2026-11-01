@@ -8,6 +8,7 @@ import {
   TASK_PRIORITY_CONFIG,
 } from '../types';
 import { LoadingSpinner } from '../../../shared/ui/LoadingSpinner';
+import { CommentSection } from '../../comments/components/CommentSection';
 import {
   X,
   Calendar,
@@ -299,6 +300,9 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   </p>
                 </div>
               </div>
+
+              {/* Comments Section */}
+              <CommentSection taskId={task.id} />
             </>
           )}
         </div>
