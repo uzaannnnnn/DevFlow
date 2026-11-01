@@ -63,3 +63,4 @@ func main() {
 		log.Fatalf("FATAL: Unknown migration command %q. Valid commands: up, down, version", command)
 	}
 }
+

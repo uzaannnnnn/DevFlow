@@ -60,13 +60,25 @@ export interface RequestOptions extends Omit<RequestInit, 'body'> {
   body?: unknown;
 }
 
+// In-memory access token storage (NEVER in localStorage/sessionStorage)
+let inMemoryAccessToken: string | null = null;
+
+export const setAuthToken = (token: string | null): void => {
+  inMemoryAccessToken = token;
+};
+
+export const getAuthToken = (): string | null => {
+  return inMemoryAccessToken;
+};
+
 /**
  * Builds the full URL including query parameters.
  */
 function buildUrl(endpoint: string, params?: Record<string, string | number | boolean | undefined>): string {
-  // If endpoint is an absolute path from root or relative to baseUrl
-  const base = endpoint.startsWith('http') ? endpoint : `${config.apiUrl.replace(/\/+$/, '')}/${endpoint.replace(/^\/+/, '')}`;
-  
+  const base = endpoint.startsWith('http')
+    ? endpoint
+    : `${config.apiUrl.replace(/\/+$/, '')}/${endpoint.replace(/^\/+/, '')}`;
+
   if (!params) {
     return base;
   }
@@ -81,7 +93,7 @@ function buildUrl(endpoint: string, params?: Record<string, string | number | bo
 }
 
 /**
- * Core fetch wrapper with JSON serialization, error envelope parsing, and credentials.
+ * Core fetch wrapper with JSON serialization, error envelope parsing, in-memory auth injection, and credentials.
  */
 async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<ApiResponse<T>> {
   const { params, body, headers, ...customOptions } = options;
@@ -91,6 +103,11 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     Accept: 'application/json',
     ...(headers as Record<string, string>),
   };
+
+  // Inject in-memory access token if available and not explicitly overridden
+  if (inMemoryAccessToken && !requestHeaders['Authorization']) {
+    requestHeaders['Authorization'] = `Bearer ${inMemoryAccessToken}`;
+  }
 
   let serializedBody: BodyInit | undefined;
   if (body !== undefined) {

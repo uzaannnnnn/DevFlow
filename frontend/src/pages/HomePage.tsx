@@ -3,7 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient, ApiClientError } from '../shared/lib/api-client';
 import { config } from '../shared/lib/config';
 import { LoadingSpinner } from '../shared/ui/LoadingSpinner';
-import { CheckCircle2, AlertTriangle, Database, Server, RefreshCw, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, Database, Server, RefreshCw, ShieldCheck, LogOut, User as UserIcon } from 'lucide-react';
+import { useAuth } from '../features/auth/AuthContext';
 
 interface HealthData {
   status: string;
@@ -21,6 +22,8 @@ interface ReadinessData {
 }
 
 export const HomePage: FC = () => {
+  const { user, logout } = useAuth();
+
   // 1. Query Backend Liveness (/health)
   const healthQuery = useQuery<HealthData, ApiClientError>({
     queryKey: ['system', 'health'],
@@ -56,18 +59,37 @@ export const HomePage: FC = () => {
           </div>
           <div>
             <h1 className="text-lg font-bold tracking-tight">DevFlow</h1>
-            <p className="text-xs text-slate-400">Sprint 1 Foundation</p>
+            <p className="text-xs text-slate-400">Sprint 2 Phase 1 — Authenticated</p>
           </div>
         </div>
 
-        <button
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-          className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors disabled:opacity-50"
-        >
-          <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Refresh Status
-        </button>
+        <div className="flex items-center gap-4">
+          {user && (
+            <div className="flex items-center gap-2 text-xs text-slate-300 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700">
+              <UserIcon className="h-3.5 w-3.5 text-indigo-400" />
+              <span className="font-medium">{user.name || user.email}</span>
+            </div>
+          )}
+
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh Status
+          </button>
+
+          {user && (
+            <button
+              onClick={() => logout()}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 transition-colors"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              Sign out
+            </button>
+          )}
+        </div>
       </header>
 
       {/* Main Content */}
@@ -75,13 +97,13 @@ export const HomePage: FC = () => {
         <div className="text-center max-w-xl mx-auto">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 mb-4">
             <ShieldCheck className="h-3.5 w-3.5" />
-            Foundation Phase Verified
+            Authentication Engine Active
           </div>
           <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
-            System Operational
+            Welcome to DevFlow
           </h2>
           <p className="mt-2 text-sm text-slate-400">
-            Frontend foundation, centralized API client, Go backend server, and PostgreSQL database migrations are verified and communicating.
+            You are securely authenticated via short-lived in-memory JWT and rotating HttpOnly refresh cookie.
           </p>
         </div>
 
@@ -163,17 +185,16 @@ export const HomePage: FC = () => {
             <span>Client Base URL: <code className="text-slate-300">{config.apiUrl}</code></span>
           </div>
           <div className="flex items-center gap-4 text-slate-400 font-mono text-[11px]">
-            <span>React 18 + Vite</span>
-            <span>TypeScript 5</span>
-            <span>TanStack Query</span>
-            <span>Tailwind CSS</span>
+            <span>Argon2id Password Hashing</span>
+            <span>In-Memory JWT Access</span>
+            <span>Rotating HttpOnly Refresh</span>
           </div>
         </div>
       </main>
 
       {/* Footer */}
       <footer className="border-t border-slate-800/60 py-4 text-center text-xs text-slate-500">
-        DevFlow — Sprint 1 Phase 4 Verified Foundation
+        DevFlow — Sprint 2 Phase 1 Verified Authentication Engine
       </footer>
     </div>
   );

@@ -2,15 +2,18 @@ import { FC, ReactNode, useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { ErrorBoundary } from '../shared/ui/ErrorBoundary';
+import { AuthProvider } from '../features/auth/AuthContext';
 
 interface AppProvidersProps {
   children: ReactNode;
   queryClient?: QueryClient;
+  skipInitialRefresh?: boolean;
 }
 
 export const AppProviders: FC<AppProvidersProps> = ({
   children,
   queryClient: customQueryClient,
+  skipInitialRefresh = false,
 }) => {
   const [defaultQueryClient] = useState(
     () =>
@@ -30,7 +33,9 @@ export const AppProviders: FC<AppProvidersProps> = ({
   return (
     <ErrorBoundary>
       <QueryClientProvider client={client}>
-        <BrowserRouter>{children}</BrowserRouter>
+        <AuthProvider skipInitialRefresh={skipInitialRefresh}>
+          <BrowserRouter>{children}</BrowserRouter>
+        </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );

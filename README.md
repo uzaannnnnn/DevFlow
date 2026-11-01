@@ -184,5 +184,7 @@ npm run dev
   - [x] **Phase 2 (Backend Foundation & Health Check):** Complete & Tested.
   - [x] **Phase 3 (Database Foundation & Migrations):** Complete & Verified.
   - [x] **Phase 4 (Frontend Foundation & API Client):** Complete & Verified.
-- **Sprint 2 (Auth & Workspace Management):** Scheduled.
+- **Sprint 2 (Auth & Workspace Management):**
+  - [x] **Phase 1 (Authentication Engine & Frontend Auth Foundation):** Complete & Verified.
+  - [ ] **Phase 2 (Workspace Management & RBAC):** In Progress.
 

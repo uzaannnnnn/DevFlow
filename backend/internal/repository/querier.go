@@ -11,14 +11,22 @@ import (
 )
 
 type Querier interface {
+	CreateRefreshSession(ctx context.Context, arg CreateRefreshSessionParams) (RefreshSession, error)
+	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	GetProjectByID(ctx context.Context, id pgtype.UUID) (Project, error)
+	GetRefreshSessionByTokenHash(ctx context.Context, tokenHash string) (RefreshSession, error)
+	GetRefreshSessionByTokenHashForUpdate(ctx context.Context, tokenHash string) (RefreshSession, error)
 	GetTaskByID(ctx context.Context, id pgtype.UUID) (Task, error)
 	GetUserByEmail(ctx context.Context, lower string) (User, error)
 	GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 	GetWorkspaceByID(ctx context.Context, id pgtype.UUID) (Workspace, error)
-	// Foundational database queries for DevFlow (Sprint 1)
+	ListActiveUserRefreshSessions(ctx context.Context, userID pgtype.UUID) ([]RefreshSession, error)
+	// Foundational database queries for DevFlow
 	// Used by sqlc to generate type-safe models and Querier interface.
 	Ping(ctx context.Context) (int32, error)
+	RevokeAllUserRefreshSessions(ctx context.Context, userID pgtype.UUID) error
+	RevokeRefreshSessionByID(ctx context.Context, arg RevokeRefreshSessionByIDParams) (RefreshSession, error)
+	RevokeRefreshSessionByTokenHash(ctx context.Context, tokenHash string) (RefreshSession, error)
 }
 
 var _ Querier = (*Queries)(nil)

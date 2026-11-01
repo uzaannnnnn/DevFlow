@@ -67,3 +67,4 @@ func newMigrator(databaseURL, migrationsPath string) (*migrate.Migrate, error) {
 	}
 	return m, nil
 }
+

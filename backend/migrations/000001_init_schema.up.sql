@@ -189,3 +189,4 @@ CREATE INDEX activity_logs_project_id_idx ON activity_logs(project_id, created_a
 CREATE INDEX activity_logs_task_id_idx ON activity_logs(task_id);
 CREATE INDEX activity_logs_actor_id_idx ON activity_logs(actor_id);
 CREATE INDEX activity_logs_created_at_idx ON activity_logs(created_at DESC);
+
