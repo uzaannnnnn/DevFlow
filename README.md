@@ -200,41 +200,165 @@ npm run dev
 
 ## Production Deployment Guide
 
+### Recommended Architecture
+
+```
+                  ┌───────────────────────────────────────────────┐
+                  │                 Users / Clients               │
+                  └───────────────────────┬───────────────────────┘
+                                          │
+                   HTTPS (TLS 1.3)        │        HTTPS (TLS 1.3)
+             ┌────────────────────────────┴────────────────────────────┐
+             ▼                                                         ▼
+┌─────────────────────────┐                               ┌─────────────────────────┐
+│     Frontend (Vercel)   │                               │     API Reverse Proxy   │
+│  - Global Edge CDN      │                               │  - Caddy / Nginx / ALB  │
+│  - React 18 SPA (Vite)  │                               │  - Let's Encrypt TLS    │
+│  - Custom Domain        │                               │  - Rate Limiting        │
+└─────────────────────────┘                               └────────────┬────────────┘
+                                                                       │ Docker Network
+                                                                       ▼
+                                                          ┌─────────────────────────┐
+                                                          │   DevFlow Go Backend    │
+                                                          │  - Pinned Docker Alpine │
+                                                          │  - Non-root user        │
+                                                          │  - Multi-stage build    │
+                                                          └────────────┬────────────┘
+                                                                       │ TLS (sslmode=require)
+                                                                       ▼
+                                                          ┌─────────────────────────┐
+                                                          │  Managed PostgreSQL 16  │
+                                                          │  - Automated snapshots  │
+                                                          │  - WAL / PITR archiving │
+                                                          │  - Connection pooling   │
+                                                          └─────────────────────────┘
+```
+
+- **Frontend:** Vercel (Global Edge Network, automatic zero-config SSL, atomic deployments).
+- **Backend:** Docker container on a Linux VPS or cloud provider (AWS ECS, DigitalOcean Droplet, Fly.io, Railway, Hetzner).
+- **Database:** Managed PostgreSQL 16 (AWS RDS, Supabase, Neon, or DigitalOcean Managed Database) with TLS enforced (`sslmode=require`).
+- **Domain & HTTPS:** Cloudflare or Caddy reverse proxy providing automatic TLS termination, HTTP/2, and strict security headers.
+- **Database Backup:** Automated daily snapshot retention (minimum 30 days), continuous WAL archiving for Point-In-Time Recovery (PITR), and pre-migration logical backups via `pg_dump`.
+
+---
+
 ### 1. Database Provisioning & Migrations
-Ensure PostgreSQL 16 is accessible. Execute migrations using the CLI binary:
-```bash
-DATABASE_URL="postgres://user:password@db-host:5432/dbname?sslmode=require" ./backend/bin/migrate up
+
+1. Provision a PostgreSQL 16 instance with SSL enabled (`sslmode=require`).
+2. Run migrations using the prebuilt CLI binary or Go runner:
+   ```bash
+   DATABASE_URL="postgres://user:password@db-host:5432/dbname?sslmode=require" ./backend/bin/migrate up
+   ```
+3. Verify that all 11 core tables are created:
+   ```bash
+   psql "$DATABASE_URL" -c "\dt"
+   ```
+
+---
+
+### 2. Backend Container Deployment (Docker on VPS / Cloud)
+
+1. Build the reproducible multi-stage Docker image (builder pinned to Go 1.27.3 on Alpine Linux):
+   ```bash
+   docker build --no-cache -t devflow-backend:latest ./backend
+   ```
+
+2. Generate a secure, high-entropy 256-bit JWT secret (never use development defaults):
+   ```bash
+   openssl rand -hex 32
+   ```
+
+3. Run the container with production configuration:
+   ```bash
+   docker run -d \
+     --name devflow-backend \
+     --restart unless-stopped \
+     -p 8080:8080 \
+     -e APP_ENV=production \
+     -e PORT=8080 \
+     -e DATABASE_URL="postgres://user:password@db-host:5432/dbname?sslmode=require" \
+     -e JWT_SECRET="<generated-64-character-hex-secret>" \
+     -e JWT_ACCESS_TTL=15m \
+     -e REFRESH_TOKEN_TTL=168h \
+     -e COOKIE_DOMAIN="yourdomain.com" \
+     -e COOKIE_SECURE=true \
+     -e CORS_ALLOWED_ORIGINS="https://app.yourdomain.com" \
+     devflow-backend:latest
+   ```
+
+4. Verify health and database readiness:
+   ```bash
+   curl -f http://localhost:8080/health
+   curl -f http://localhost:8080/health/ready
+   ```
+
+---
+
+### 3. Reverse Proxy & HTTPS Configuration (Caddy / Nginx)
+
+Using **Caddy** (automatic Let's Encrypt TLS):
+```caddyfile
+api.yourdomain.com {
+    reverse_proxy localhost:8080 {
+        header_up Host {host}
+        header_up X-Real-IP {remote}
+        header_up X-Forwarded-For {remote}
+        header_up X-Forwarded-Proto {scheme}
+    }
+}
 ```
 
-### 2. Backend Container Deployment
-Build and run the backend Docker image:
-```bash
-docker build -t devflow-backend:latest ./backend
-docker run -d \
-  --name devflow-backend \
-  -p 8080:8080 \
-  -e APP_ENV=production \
-  -e PORT=8080 \
-  -e DATABASE_URL="postgres://user:password@db-host:5432/dbname?sslmode=require" \
-  -e JWT_SECRET="your_production_secure_secret_key_minimum_32_bytes" \
-  -e COOKIE_DOMAIN="yourdomain.com" \
-  -e COOKIE_SECURE=true \
-  -e CORS_ALLOWED_ORIGINS="https://yourdomain.com" \
-  devflow-backend:latest
+Using **Nginx**:
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name api.yourdomain.com;
+
+    ssl_certificate /etc/letsencrypt/live/api.yourdomain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/api.yourdomain.com/privkey.pem;
+
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
 ```
 
-### 3. Frontend Deployment (Static Hosting / Vercel)
-Build the production static assets:
-```bash
-cd frontend
-VITE_API_URL="https://api.yourdomain.com/api/v1" npm run build
-# Deploy the generated `dist/` directory to Vercel, Netlify, or Nginx
-```
+---
 
-### 4. Health Check Verification
-```bash
-curl -f https://api.yourdomain.com/health
-curl -f https://api.yourdomain.com/health/ready
-```
+### 4. Frontend Deployment on Vercel
+
+1. Push code to your Git repository (GitHub / GitLab).
+2. Import project into Vercel:
+   - **Framework Preset:** Vite
+   - **Root Directory:** `frontend`
+   - **Build Command:** `npm run build`
+   - **Output Directory:** `dist`
+3. Configure Environment Variables in Vercel Project Settings:
+   - `VITE_API_URL` = `https://api.yourdomain.com/api/v1`
+4. Set custom domain (e.g., `app.yourdomain.com`).
+5. Verify client build locally before deployment:
+   ```bash
+   cd frontend
+   VITE_API_URL="https://api.yourdomain.com/api/v1" npm run build
+   ```
+
+---
+
+### 5. Database Backup Strategy
+
+1. **Continuous Backups (PITR):** Enable Write-Ahead Log (WAL) archiving in your cloud database provider for 7–30 day Point-In-Time Recovery.
+2. **Automated Daily Snapshots:** Schedule daily storage-level snapshots with 30-day retention.
+3. **Pre-Migration Logical Backup:** Before applying database migrations or production releases, execute a logical export:
+   ```bash
+   pg_dump -Fc "$DATABASE_URL" > "backup-devflow-$(date +%Y%m%d%H%M%S).dump"
+   ```
+4. **Disaster Recovery Restoration Test:** Periodically test restoration into a staging container:
+   ```bash
+   pg_restore --clean --if-exists -d "$STAGING_DATABASE_URL" backup-devflow-*.dump
+   ```
 
 

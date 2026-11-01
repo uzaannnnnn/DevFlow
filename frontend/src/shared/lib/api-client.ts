@@ -75,9 +75,19 @@ export const getAuthToken = (): string | null => {
  * Builds the full URL including query parameters.
  */
 function buildUrl(endpoint: string, params?: Record<string, string | number | boolean | undefined>): string {
-  const base = endpoint.startsWith('http')
-    ? endpoint
-    : `${config.apiUrl.replace(/\/+$/, '')}/${endpoint.replace(/^\/+/, '')}`;
+  let base: string;
+  if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
+    base = endpoint;
+  } else {
+    const cleanEndpoint = endpoint.replace(/^\/+/, '');
+    if (cleanEndpoint.startsWith('health')) {
+      base = `${config.backendUrl}/${cleanEndpoint}`;
+    } else if (cleanEndpoint.startsWith('api/v1/')) {
+      base = `${config.backendUrl}/${cleanEndpoint}`;
+    } else {
+      base = `${config.apiUrl.replace(/\/+$/, '')}/${cleanEndpoint}`;
+    }
+  }
 
   if (!params) {
     return base;
