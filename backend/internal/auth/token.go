@@ -122,3 +122,4 @@ func VerifyRefreshToken(token string, expectedHash string) bool {
 	computedHash := HashRefreshToken(token)
 	return subtle.ConstantTimeCompare([]byte(computedHash), []byte(expectedHash)) == 1
 }
+

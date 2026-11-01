@@ -60,6 +60,9 @@ func SetupRouter(cfg *config.Config, pool ...*pgxpool.Pool) *gin.Engine {
 	authUsecase := usecases.NewAuthUsecase(cfg, p, queries)
 	authHandler := NewAuthHandler(cfg, authUsecase)
 
+	workspaceUsecase := usecases.NewWorkspaceUsecase(p, queries)
+	workspaceHandler := NewWorkspaceHandler(workspaceUsecase)
+
 	// API v1 route group
 	v1 := r.Group("/api/v1")
 	{
@@ -84,6 +87,22 @@ func SetupRouter(cfg *config.Config, pool ...*pgxpool.Pool) *gin.Engine {
 			protected.GET("/users/me", authHandler.GetCurrentUser)
 			protected.GET("/auth/sessions", authHandler.ListSessions)
 			protected.DELETE("/auth/sessions/:id", authHandler.RevokeSession)
+
+			// Workspaces
+			workspaces := protected.Group("/workspaces")
+			{
+				workspaces.POST("", workspaceHandler.Create)
+				workspaces.GET("", workspaceHandler.List)
+				workspaces.GET("/:id", workspaceHandler.Get)
+				workspaces.PATCH("/:id", workspaceHandler.Update)
+				workspaces.DELETE("/:id", workspaceHandler.Delete)
+
+				// Members
+				workspaces.GET("/:id/members", workspaceHandler.ListMembers)
+				workspaces.POST("/:id/members", workspaceHandler.AddMember)
+				workspaces.PATCH("/:id/members/:userId", workspaceHandler.UpdateMemberRole)
+				workspaces.DELETE("/:id/members/:userId", workspaceHandler.RemoveMember)
+			}
 		}
 	}
 

@@ -134,3 +134,4 @@ func TestHashPassword_UnicodeSupport(t *testing.T) {
 		t.Fatalf("failed to verify unicode password: err=%v, match=%v", err, match)
 	}
 }
+

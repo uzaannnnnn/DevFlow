@@ -150,3 +150,4 @@ func VerifyPassword(password, encodedHash string) (bool, error) {
 
 	return false, nil
 }
+

@@ -228,3 +228,4 @@ func (h *AuthHandler) RevokeSession(c *gin.Context) {
 		"message": "Session revoked successfully",
 	}, nil)
 }
+

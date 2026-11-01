@@ -86,13 +86,14 @@ type User struct {
 }
 
 type Workspace struct {
-	ID        pgtype.UUID        `json:"id"`
-	Name      string             `json:"name"`
-	Slug      pgtype.Text        `json:"slug"`
-	OwnerID   pgtype.UUID        `json:"owner_id"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
-	DeletedAt pgtype.Timestamptz `json:"deleted_at"`
+	ID          pgtype.UUID        `json:"id"`
+	Name        string             `json:"name"`
+	Slug        pgtype.Text        `json:"slug"`
+	OwnerID     pgtype.UUID        `json:"owner_id"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt   pgtype.Timestamptz `json:"deleted_at"`
+	Description pgtype.Text        `json:"description"`
 }
 
 type WorkspaceInvitation struct {

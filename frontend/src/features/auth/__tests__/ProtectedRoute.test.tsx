@@ -60,3 +60,4 @@ describe('ProtectedRoute Component', () => {
     expect(screen.queryByText('Login Page View')).not.toBeInTheDocument();
   });
 });
+

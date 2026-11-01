@@ -11,6 +11,53 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const addWorkspaceMember = `-- name: AddWorkspaceMember :one
+
+INSERT INTO workspace_members (
+    workspace_id,
+    user_id,
+    role
+) VALUES (
+    $1,
+    $2,
+    $3
+) RETURNING id, workspace_id, user_id, role, created_at
+`
+
+type AddWorkspaceMemberParams struct {
+	WorkspaceID pgtype.UUID `json:"workspace_id"`
+	UserID      pgtype.UUID `json:"user_id"`
+	Role        string      `json:"role"`
+}
+
+// ============================================================================
+// Workspace Members Queries
+// ============================================================================
+func (q *Queries) AddWorkspaceMember(ctx context.Context, arg AddWorkspaceMemberParams) (WorkspaceMember, error) {
+	row := q.db.QueryRow(ctx, addWorkspaceMember, arg.WorkspaceID, arg.UserID, arg.Role)
+	var i WorkspaceMember
+	err := row.Scan(
+		&i.ID,
+		&i.WorkspaceID,
+		&i.UserID,
+		&i.Role,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const countWorkspaceOwners = `-- name: CountWorkspaceOwners :one
+SELECT count(*)::bigint FROM workspace_members
+WHERE workspace_id = $1 AND role = 'owner'
+`
+
+func (q *Queries) CountWorkspaceOwners(ctx context.Context, workspaceID pgtype.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, countWorkspaceOwners, workspaceID)
+	var column_1 int64
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const createRefreshSession = `-- name: CreateRefreshSession :one
 INSERT INTO refresh_sessions (
     user_id,
@@ -84,11 +131,85 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
+const createWorkspace = `-- name: CreateWorkspace :one
+
+INSERT INTO workspaces (
+    name,
+    slug,
+    description,
+    owner_id
+) VALUES (
+    $1,
+    $2,
+    $3,
+    $4
+) RETURNING id, name, slug, owner_id, created_at, updated_at, deleted_at, description
+`
+
+type CreateWorkspaceParams struct {
+	Name        string      `json:"name"`
+	Slug        pgtype.Text `json:"slug"`
+	Description pgtype.Text `json:"description"`
+	OwnerID     pgtype.UUID `json:"owner_id"`
+}
+
+// ============================================================================
+// Workspace Queries
+// ============================================================================
+func (q *Queries) CreateWorkspace(ctx context.Context, arg CreateWorkspaceParams) (Workspace, error) {
+	row := q.db.QueryRow(ctx, createWorkspace,
+		arg.Name,
+		arg.Slug,
+		arg.Description,
+		arg.OwnerID,
+	)
+	var i Workspace
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Slug,
+		&i.OwnerID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.Description,
+	)
+	return i, err
+}
+
+const deleteWorkspaceMember = `-- name: DeleteWorkspaceMember :one
+DELETE FROM workspace_members
+WHERE workspace_id = $1 AND user_id = $2
+RETURNING id, workspace_id, user_id, role, created_at
+`
+
+type DeleteWorkspaceMemberParams struct {
+	WorkspaceID pgtype.UUID `json:"workspace_id"`
+	UserID      pgtype.UUID `json:"user_id"`
+}
+
+func (q *Queries) DeleteWorkspaceMember(ctx context.Context, arg DeleteWorkspaceMemberParams) (WorkspaceMember, error) {
+	row := q.db.QueryRow(ctx, deleteWorkspaceMember, arg.WorkspaceID, arg.UserID)
+	var i WorkspaceMember
+	err := row.Scan(
+		&i.ID,
+		&i.WorkspaceID,
+		&i.UserID,
+		&i.Role,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getProjectByID = `-- name: GetProjectByID :one
+
 SELECT id, workspace_id, key, name, description, task_counter, created_by, created_at, updated_at, deleted_at FROM projects
 WHERE id = $1 AND deleted_at IS NULL LIMIT 1
 `
 
+// ============================================================================
+// Project and Task Basic Stubs
+// ============================================================================
 func (q *Queries) GetProjectByID(ctx context.Context, id pgtype.UUID) (Project, error) {
 	row := q.db.QueryRow(ctx, getProjectByID, id)
 	var i Project
@@ -213,7 +334,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 }
 
 const getWorkspaceByID = `-- name: GetWorkspaceByID :one
-SELECT id, name, slug, owner_id, created_at, updated_at, deleted_at FROM workspaces
+SELECT id, name, slug, owner_id, created_at, updated_at, deleted_at, description FROM workspaces
 WHERE id = $1 AND deleted_at IS NULL LIMIT 1
 `
 
@@ -228,8 +349,139 @@ func (q *Queries) GetWorkspaceByID(ctx context.Context, id pgtype.UUID) (Workspa
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+		&i.Description,
 	)
 	return i, err
+}
+
+const getWorkspaceByIDForUpdate = `-- name: GetWorkspaceByIDForUpdate :one
+SELECT id, name, slug, owner_id, created_at, updated_at, deleted_at, description FROM workspaces
+WHERE id = $1 AND deleted_at IS NULL
+FOR UPDATE LIMIT 1
+`
+
+func (q *Queries) GetWorkspaceByIDForUpdate(ctx context.Context, id pgtype.UUID) (Workspace, error) {
+	row := q.db.QueryRow(ctx, getWorkspaceByIDForUpdate, id)
+	var i Workspace
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Slug,
+		&i.OwnerID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.Description,
+	)
+	return i, err
+}
+
+const getWorkspaceBySlug = `-- name: GetWorkspaceBySlug :one
+SELECT id, name, slug, owner_id, created_at, updated_at, deleted_at, description FROM workspaces
+WHERE lower(slug) = lower($1) AND deleted_at IS NULL LIMIT 1
+`
+
+func (q *Queries) GetWorkspaceBySlug(ctx context.Context, lower string) (Workspace, error) {
+	row := q.db.QueryRow(ctx, getWorkspaceBySlug, lower)
+	var i Workspace
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Slug,
+		&i.OwnerID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.Description,
+	)
+	return i, err
+}
+
+const getWorkspaceMember = `-- name: GetWorkspaceMember :one
+SELECT id, workspace_id, user_id, role, created_at FROM workspace_members
+WHERE workspace_id = $1 AND user_id = $2 LIMIT 1
+`
+
+type GetWorkspaceMemberParams struct {
+	WorkspaceID pgtype.UUID `json:"workspace_id"`
+	UserID      pgtype.UUID `json:"user_id"`
+}
+
+func (q *Queries) GetWorkspaceMember(ctx context.Context, arg GetWorkspaceMemberParams) (WorkspaceMember, error) {
+	row := q.db.QueryRow(ctx, getWorkspaceMember, arg.WorkspaceID, arg.UserID)
+	var i WorkspaceMember
+	err := row.Scan(
+		&i.ID,
+		&i.WorkspaceID,
+		&i.UserID,
+		&i.Role,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getWorkspaceMemberForUpdate = `-- name: GetWorkspaceMemberForUpdate :one
+SELECT id, workspace_id, user_id, role, created_at FROM workspace_members
+WHERE workspace_id = $1 AND user_id = $2
+FOR UPDATE LIMIT 1
+`
+
+type GetWorkspaceMemberForUpdateParams struct {
+	WorkspaceID pgtype.UUID `json:"workspace_id"`
+	UserID      pgtype.UUID `json:"user_id"`
+}
+
+func (q *Queries) GetWorkspaceMemberForUpdate(ctx context.Context, arg GetWorkspaceMemberForUpdateParams) (WorkspaceMember, error) {
+	row := q.db.QueryRow(ctx, getWorkspaceMemberForUpdate, arg.WorkspaceID, arg.UserID)
+	var i WorkspaceMember
+	err := row.Scan(
+		&i.ID,
+		&i.WorkspaceID,
+		&i.UserID,
+		&i.Role,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getWorkspaceMembersForUpdateDeterministic = `-- name: GetWorkspaceMembersForUpdateDeterministic :many
+SELECT user_id, role
+FROM workspace_members
+WHERE workspace_id = $1
+  AND user_id IN ($2, $3)
+ORDER BY user_id
+FOR UPDATE
+`
+
+type GetWorkspaceMembersForUpdateDeterministicParams struct {
+	WorkspaceID pgtype.UUID `json:"workspace_id"`
+	UserID      pgtype.UUID `json:"user_id"`
+	UserID_2    pgtype.UUID `json:"user_id_2"`
+}
+
+type GetWorkspaceMembersForUpdateDeterministicRow struct {
+	UserID pgtype.UUID `json:"user_id"`
+	Role   string      `json:"role"`
+}
+
+func (q *Queries) GetWorkspaceMembersForUpdateDeterministic(ctx context.Context, arg GetWorkspaceMembersForUpdateDeterministicParams) ([]GetWorkspaceMembersForUpdateDeterministicRow, error) {
+	rows, err := q.db.Query(ctx, getWorkspaceMembersForUpdateDeterministic, arg.WorkspaceID, arg.UserID, arg.UserID_2)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetWorkspaceMembersForUpdateDeterministicRow
+	for rows.Next() {
+		var i GetWorkspaceMembersForUpdateDeterministicRow
+		if err := rows.Scan(&i.UserID, &i.Role); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listActiveUserRefreshSessions = `-- name: ListActiveUserRefreshSessions :many
@@ -254,6 +506,121 @@ func (q *Queries) ListActiveUserRefreshSessions(ctx context.Context, userID pgty
 			&i.ExpiresAt,
 			&i.RevokedAt,
 			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listWorkspaceMembers = `-- name: ListWorkspaceMembers :many
+SELECT 
+    wm.id,
+    wm.workspace_id,
+    wm.user_id,
+    wm.role,
+    wm.created_at,
+    u.email,
+    u.name as user_name,
+    u.avatar_url
+FROM workspace_members wm
+JOIN users u ON wm.user_id = u.id
+WHERE wm.workspace_id = $1
+ORDER BY wm.created_at ASC
+`
+
+type ListWorkspaceMembersRow struct {
+	ID          pgtype.UUID        `json:"id"`
+	WorkspaceID pgtype.UUID        `json:"workspace_id"`
+	UserID      pgtype.UUID        `json:"user_id"`
+	Role        string             `json:"role"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	Email       string             `json:"email"`
+	UserName    pgtype.Text        `json:"user_name"`
+	AvatarUrl   pgtype.Text        `json:"avatar_url"`
+}
+
+func (q *Queries) ListWorkspaceMembers(ctx context.Context, workspaceID pgtype.UUID) ([]ListWorkspaceMembersRow, error) {
+	rows, err := q.db.Query(ctx, listWorkspaceMembers, workspaceID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListWorkspaceMembersRow
+	for rows.Next() {
+		var i ListWorkspaceMembersRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.WorkspaceID,
+			&i.UserID,
+			&i.Role,
+			&i.CreatedAt,
+			&i.Email,
+			&i.UserName,
+			&i.AvatarUrl,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listWorkspacesByUserID = `-- name: ListWorkspacesByUserID :many
+SELECT 
+    w.id,
+    w.name,
+    w.slug,
+    w.description,
+    w.owner_id,
+    w.created_at,
+    w.updated_at,
+    w.deleted_at,
+    wm.role as member_role
+FROM workspaces w
+JOIN workspace_members wm ON w.id = wm.workspace_id
+WHERE wm.user_id = $1 AND w.deleted_at IS NULL
+ORDER BY w.created_at DESC
+`
+
+type ListWorkspacesByUserIDRow struct {
+	ID          pgtype.UUID        `json:"id"`
+	Name        string             `json:"name"`
+	Slug        pgtype.Text        `json:"slug"`
+	Description pgtype.Text        `json:"description"`
+	OwnerID     pgtype.UUID        `json:"owner_id"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt   pgtype.Timestamptz `json:"deleted_at"`
+	MemberRole  string             `json:"member_role"`
+}
+
+func (q *Queries) ListWorkspacesByUserID(ctx context.Context, userID pgtype.UUID) ([]ListWorkspacesByUserIDRow, error) {
+	rows, err := q.db.Query(ctx, listWorkspacesByUserID, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListWorkspacesByUserIDRow
+	for rows.Next() {
+		var i ListWorkspacesByUserIDRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Slug,
+			&i.Description,
+			&i.OwnerID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+			&i.MemberRole,
 		); err != nil {
 			return nil, err
 		}
@@ -333,6 +700,162 @@ func (q *Queries) RevokeRefreshSessionByTokenHash(ctx context.Context, tokenHash
 		&i.ExpiresAt,
 		&i.RevokedAt,
 		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const softDeleteWorkspace = `-- name: SoftDeleteWorkspace :one
+UPDATE workspaces
+SET deleted_at = now(), updated_at = now()
+WHERE id = $1 AND deleted_at IS NULL
+RETURNING id, name, slug, owner_id, created_at, updated_at, deleted_at, description
+`
+
+func (q *Queries) SoftDeleteWorkspace(ctx context.Context, id pgtype.UUID) (Workspace, error) {
+	row := q.db.QueryRow(ctx, softDeleteWorkspace, id)
+	var i Workspace
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Slug,
+		&i.OwnerID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.Description,
+	)
+	return i, err
+}
+
+const unassignTasksForDepartingMember = `-- name: UnassignTasksForDepartingMember :many
+UPDATE tasks t
+SET assignee_id = NULL, updated_at = now()
+FROM projects p
+WHERE t.project_id = p.id
+  AND p.workspace_id = $1
+  AND t.assignee_id = $2
+RETURNING t.id, t.project_id
+`
+
+type UnassignTasksForDepartingMemberParams struct {
+	WorkspaceID pgtype.UUID `json:"workspace_id"`
+	AssigneeID  pgtype.UUID `json:"assignee_id"`
+}
+
+type UnassignTasksForDepartingMemberRow struct {
+	ID        pgtype.UUID `json:"id"`
+	ProjectID pgtype.UUID `json:"project_id"`
+}
+
+func (q *Queries) UnassignTasksForDepartingMember(ctx context.Context, arg UnassignTasksForDepartingMemberParams) ([]UnassignTasksForDepartingMemberRow, error) {
+	rows, err := q.db.Query(ctx, unassignTasksForDepartingMember, arg.WorkspaceID, arg.AssigneeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []UnassignTasksForDepartingMemberRow
+	for rows.Next() {
+		var i UnassignTasksForDepartingMemberRow
+		if err := rows.Scan(&i.ID, &i.ProjectID); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateWorkspace = `-- name: UpdateWorkspace :one
+UPDATE workspaces
+SET 
+    name = coalesce($1, name),
+    slug = coalesce($2, slug),
+    description = coalesce($3, description),
+    updated_at = now()
+WHERE id = $4 AND deleted_at IS NULL
+RETURNING id, name, slug, owner_id, created_at, updated_at, deleted_at, description
+`
+
+type UpdateWorkspaceParams struct {
+	Name        pgtype.Text `json:"name"`
+	Slug        pgtype.Text `json:"slug"`
+	Description pgtype.Text `json:"description"`
+	ID          pgtype.UUID `json:"id"`
+}
+
+func (q *Queries) UpdateWorkspace(ctx context.Context, arg UpdateWorkspaceParams) (Workspace, error) {
+	row := q.db.QueryRow(ctx, updateWorkspace,
+		arg.Name,
+		arg.Slug,
+		arg.Description,
+		arg.ID,
+	)
+	var i Workspace
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Slug,
+		&i.OwnerID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.Description,
+	)
+	return i, err
+}
+
+const updateWorkspaceMemberRole = `-- name: UpdateWorkspaceMemberRole :one
+UPDATE workspace_members
+SET role = $3
+WHERE workspace_id = $1 AND user_id = $2
+RETURNING id, workspace_id, user_id, role, created_at
+`
+
+type UpdateWorkspaceMemberRoleParams struct {
+	WorkspaceID pgtype.UUID `json:"workspace_id"`
+	UserID      pgtype.UUID `json:"user_id"`
+	Role        string      `json:"role"`
+}
+
+func (q *Queries) UpdateWorkspaceMemberRole(ctx context.Context, arg UpdateWorkspaceMemberRoleParams) (WorkspaceMember, error) {
+	row := q.db.QueryRow(ctx, updateWorkspaceMemberRole, arg.WorkspaceID, arg.UserID, arg.Role)
+	var i WorkspaceMember
+	err := row.Scan(
+		&i.ID,
+		&i.WorkspaceID,
+		&i.UserID,
+		&i.Role,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const updateWorkspaceOwner = `-- name: UpdateWorkspaceOwner :one
+UPDATE workspaces
+SET owner_id = $2, updated_at = now()
+WHERE id = $1 AND deleted_at IS NULL
+RETURNING id, name, slug, owner_id, created_at, updated_at, deleted_at, description
+`
+
+type UpdateWorkspaceOwnerParams struct {
+	ID      pgtype.UUID `json:"id"`
+	OwnerID pgtype.UUID `json:"owner_id"`
+}
+
+func (q *Queries) UpdateWorkspaceOwner(ctx context.Context, arg UpdateWorkspaceOwnerParams) (Workspace, error) {
+	row := q.db.QueryRow(ctx, updateWorkspaceOwner, arg.ID, arg.OwnerID)
+	var i Workspace
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Slug,
+		&i.OwnerID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.Description,
 	)
 	return i, err
 }

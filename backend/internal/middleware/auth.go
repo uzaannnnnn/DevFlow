@@ -121,3 +121,4 @@ func GetAuthenticatedUserEmail(c *gin.Context) string {
 
 	return email
 }
+

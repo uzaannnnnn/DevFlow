@@ -69,8 +69,8 @@ func TestDatabase_MigrationsAndConstraints(t *testing.T) {
 		if err != nil {
 			t.Fatalf("MigrationVersion failed: %v", err)
 		}
-		if ver != 1 || dirty {
-			t.Errorf("expected version 1 (clean), got version %d, dirty=%v", ver, dirty)
+		if ver < 2 || dirty {
+			t.Errorf("expected version >= 2 (clean), got version %d, dirty=%v", ver, dirty)
 		}
 	})
 
@@ -196,6 +196,33 @@ func TestDatabase_MigrationsAndConstraints(t *testing.T) {
 			t.Errorf("expected duplicate owner error via workspace_members_owner_partial_key, got nil")
 		}
 
+		// Valid viewer role should succeed
+		var user3ID string
+		err = pool.QueryRow(ctx, `
+			INSERT INTO users (email, password_hash, name)
+			VALUES ('user3@example.com', 'hash3', 'User Three')
+			RETURNING id::text;
+		`).Scan(&user3ID)
+		if err != nil {
+			t.Fatalf("failed to insert user3: %v", err)
+		}
+		_, err = pool.Exec(ctx, `
+			INSERT INTO workspace_members (workspace_id, user_id, role)
+			VALUES ($1, $2, 'viewer');
+		`, workspaceID, user3ID)
+		if err != nil {
+			t.Fatalf("failed to insert user3 as viewer: %v", err)
+		}
+
+		// Invalid role should fail
+		_, err = pool.Exec(ctx, `
+			INSERT INTO workspace_members (workspace_id, user_id, role)
+			VALUES ($1, $2, 'invalid_role');
+		`, workspaceID, user3ID)
+		if err == nil {
+			t.Errorf("expected check constraint error on invalid role, got nil")
+		}
+
 		// D. Project & Project Key Uniqueness
 		var projectID string
 		err = pool.QueryRow(ctx, `
@@ -313,8 +340,8 @@ func TestDatabase_MigrationsAndConstraints(t *testing.T) {
 		if err != nil {
 			t.Fatalf("MigrationVersion failed: %v", err)
 		}
-		if ver != 1 || dirty {
-			t.Errorf("expected version 1 clean after reapply, got %d, dirty=%v", ver, dirty)
+		if ver < 2 || dirty {
+			t.Errorf("expected version >= 2 clean after reapply, got %d, dirty=%v", ver, dirty)
 		}
 	})
 }

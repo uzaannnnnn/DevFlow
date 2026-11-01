@@ -176,3 +176,4 @@ func TestRefreshToken_GenerationAndHashing(t *testing.T) {
 		t.Fatalf("VerifyRefreshToken matched invalid token!")
 	}
 }
+

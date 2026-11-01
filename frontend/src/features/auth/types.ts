@@ -31,3 +31,4 @@ export interface Session {
   created_at: string;
   is_current: boolean;
 }
+

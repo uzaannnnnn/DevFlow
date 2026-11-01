@@ -148,3 +148,4 @@ func TestRequireAuth_WrongSecret(t *testing.T) {
 		t.Fatalf("expected 401 for invalid signature, got %d", w.Code)
 	}
 }
+

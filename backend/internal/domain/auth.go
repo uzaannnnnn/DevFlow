@@ -46,3 +46,4 @@ type SessionResponse struct {
 	CreatedAt time.Time `json:"created_at"`
 	IsCurrent bool      `json:"is_current"`
 }
+

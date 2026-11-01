@@ -11,8 +11,21 @@ import (
 )
 
 type Querier interface {
+	// ============================================================================
+	// Workspace Members Queries
+	// ============================================================================
+	AddWorkspaceMember(ctx context.Context, arg AddWorkspaceMemberParams) (WorkspaceMember, error)
+	CountWorkspaceOwners(ctx context.Context, workspaceID pgtype.UUID) (int64, error)
 	CreateRefreshSession(ctx context.Context, arg CreateRefreshSessionParams) (RefreshSession, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	// ============================================================================
+	// Workspace Queries
+	// ============================================================================
+	CreateWorkspace(ctx context.Context, arg CreateWorkspaceParams) (Workspace, error)
+	DeleteWorkspaceMember(ctx context.Context, arg DeleteWorkspaceMemberParams) (WorkspaceMember, error)
+	// ============================================================================
+	// Project and Task Basic Stubs
+	// ============================================================================
 	GetProjectByID(ctx context.Context, id pgtype.UUID) (Project, error)
 	GetRefreshSessionByTokenHash(ctx context.Context, tokenHash string) (RefreshSession, error)
 	GetRefreshSessionByTokenHashForUpdate(ctx context.Context, tokenHash string) (RefreshSession, error)
@@ -20,13 +33,25 @@ type Querier interface {
 	GetUserByEmail(ctx context.Context, lower string) (User, error)
 	GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
 	GetWorkspaceByID(ctx context.Context, id pgtype.UUID) (Workspace, error)
+	GetWorkspaceByIDForUpdate(ctx context.Context, id pgtype.UUID) (Workspace, error)
+	GetWorkspaceBySlug(ctx context.Context, lower string) (Workspace, error)
+	GetWorkspaceMember(ctx context.Context, arg GetWorkspaceMemberParams) (WorkspaceMember, error)
+	GetWorkspaceMemberForUpdate(ctx context.Context, arg GetWorkspaceMemberForUpdateParams) (WorkspaceMember, error)
+	GetWorkspaceMembersForUpdateDeterministic(ctx context.Context, arg GetWorkspaceMembersForUpdateDeterministicParams) ([]GetWorkspaceMembersForUpdateDeterministicRow, error)
 	ListActiveUserRefreshSessions(ctx context.Context, userID pgtype.UUID) ([]RefreshSession, error)
+	ListWorkspaceMembers(ctx context.Context, workspaceID pgtype.UUID) ([]ListWorkspaceMembersRow, error)
+	ListWorkspacesByUserID(ctx context.Context, userID pgtype.UUID) ([]ListWorkspacesByUserIDRow, error)
 	// Foundational database queries for DevFlow
 	// Used by sqlc to generate type-safe models and Querier interface.
 	Ping(ctx context.Context) (int32, error)
 	RevokeAllUserRefreshSessions(ctx context.Context, userID pgtype.UUID) error
 	RevokeRefreshSessionByID(ctx context.Context, arg RevokeRefreshSessionByIDParams) (RefreshSession, error)
 	RevokeRefreshSessionByTokenHash(ctx context.Context, tokenHash string) (RefreshSession, error)
+	SoftDeleteWorkspace(ctx context.Context, id pgtype.UUID) (Workspace, error)
+	UnassignTasksForDepartingMember(ctx context.Context, arg UnassignTasksForDepartingMemberParams) ([]UnassignTasksForDepartingMemberRow, error)
+	UpdateWorkspace(ctx context.Context, arg UpdateWorkspaceParams) (Workspace, error)
+	UpdateWorkspaceMemberRole(ctx context.Context, arg UpdateWorkspaceMemberRoleParams) (WorkspaceMember, error)
+	UpdateWorkspaceOwner(ctx context.Context, arg UpdateWorkspaceOwnerParams) (Workspace, error)
 }
 
 var _ Querier = (*Queries)(nil)

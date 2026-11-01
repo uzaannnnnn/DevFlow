@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { ErrorBoundary } from '../shared/ui/ErrorBoundary';
 import { AuthProvider } from '../features/auth/AuthContext';
+import { WorkspaceProvider } from '../features/workspace/WorkspaceContext';
 
 interface AppProvidersProps {
   children: ReactNode;
@@ -34,7 +35,9 @@ export const AppProviders: FC<AppProvidersProps> = ({
     <ErrorBoundary>
       <QueryClientProvider client={client}>
         <AuthProvider skipInitialRefresh={skipInitialRefresh}>
-          <BrowserRouter>{children}</BrowserRouter>
+          <WorkspaceProvider skipAutoFetch={skipInitialRefresh}>
+            <BrowserRouter>{children}</BrowserRouter>
+          </WorkspaceProvider>
         </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>

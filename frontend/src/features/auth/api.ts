@@ -22,3 +22,4 @@ export const authApi = {
     return apiClient.get<{ user: User }>('/api/v1/auth/me');
   },
 };
+

@@ -361,3 +361,4 @@ func (u *authUsecase) RevokeSession(ctx context.Context, userID uuid.UUID, sessi
 
 	return nil
 }
+
