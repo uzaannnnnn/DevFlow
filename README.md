@@ -174,6 +174,19 @@ npm run dev
 | `COOKIE_SECURE` | `false` (dev) / `true` (prod) | HTTPS-only flag for authentication cookies. |
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:5173` | Comma-separated list of allowed origins. Wildcards (`*`) are disallowed in production. |
 
+### Environment Configuration Matrix
+
+| Setting | Development | Staging | Production |
+|---|---|---|---|
+| `APP_ENV` | `development` | `production` (with staging flags) | `production` |
+| `PORT` | `8080` | `8080` (behind reverse proxy) | `8080` (behind reverse proxy) |
+| `DATABASE_URL` | `postgres://...sslmode=disable` | `postgres://...sslmode=require` | `postgres://...sslmode=require` |
+| `JWT_SECRET` | Dev fallback permitted | `openssl rand -hex 32` | `openssl rand -hex 32` (secure vault) |
+| `COOKIE_DOMAIN` | `localhost` | `staging.yourdomain.com` | `yourdomain.com` |
+| `COOKIE_SECURE` | `false` | `true` (enforces HTTPS) | `true` (enforces HTTPS) |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:5173` | `https://staging-app.yourdomain.com` | `https://app.yourdomain.com` (no wildcards) |
+| Frontend `VITE_API_URL` | `http://localhost:8080/api/v1` | `https://staging-api.yourdomain.com/api/v1` | `https://api.yourdomain.com/api/v1` |
+
 ---
 
 ## Project Status
