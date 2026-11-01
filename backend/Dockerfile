@@ -21,6 +21,9 @@ FROM alpine:3.20
 
 WORKDIR /app
 
+# Install runtime dependencies for TLS verification to Neon PostgreSQL and timezone data
+RUN apk add --no-cache ca-certificates tzdata
+
 # Non-root user
 RUN addgroup -S devflow && adduser -S devflow -G devflow
 USER devflow

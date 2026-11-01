@@ -93,13 +93,18 @@ function buildUrl(endpoint: string, params?: Record<string, string | number | bo
     return base;
   }
 
-  const url = new URL(base);
+  const isAbsolute = base.startsWith('http://') || base.startsWith('https://');
+  const dummyOrigin = typeof window !== 'undefined' && window.location?.origin
+    ? window.location.origin
+    : 'http://localhost';
+
+  const url = new URL(base, dummyOrigin);
   for (const [key, value] of Object.entries(params)) {
     if (value !== undefined) {
       url.searchParams.append(key, String(value));
     }
   }
-  return url.toString();
+  return isAbsolute ? url.toString() : `${url.pathname}${url.search}${url.hash}`;
 }
 
 /**
