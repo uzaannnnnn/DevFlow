@@ -500,3 +500,149 @@ UPDATE tasks
 SET deleted_at = now(), updated_at = now()
 WHERE id = $1 AND deleted_at IS NULL
 RETURNING *;
+
+-- name: LockTaskForKeyShare :one
+SELECT id, project_id, identifier, title, deleted_at
+FROM tasks
+WHERE id = $1 AND deleted_at IS NULL
+FOR KEY SHARE;
+
+-- name: CreateComment :one
+INSERT INTO comments (
+    id, task_id, author_id, body, created_at, updated_at
+) VALUES (
+    gen_random_uuid(), $1, $2, $3, now(), now()
+)
+RETURNING *;
+
+-- name: GetCommentByID :one
+SELECT
+    c.id,
+    c.task_id,
+    c.author_id,
+    c.body,
+    c.created_at,
+    c.updated_at,
+    c.deleted_at,
+    u.email as author_email,
+    u.name as author_name,
+    u.avatar_url as author_avatar_url,
+    t.project_id
+FROM comments c
+JOIN users u ON c.author_id = u.id
+JOIN tasks t ON c.task_id = t.id
+WHERE c.id = $1
+  AND c.deleted_at IS NULL
+  AND t.deleted_at IS NULL
+LIMIT 1;
+
+-- name: GetCommentByIDForUpdate :one
+SELECT
+    c.id,
+    c.task_id,
+    c.author_id,
+    c.body,
+    c.created_at,
+    c.updated_at,
+    c.deleted_at,
+    t.project_id
+FROM comments c
+JOIN tasks t ON c.task_id = t.id
+WHERE c.id = $1
+  AND c.deleted_at IS NULL
+  AND t.deleted_at IS NULL
+FOR UPDATE OF c
+LIMIT 1;
+
+-- name: ListCommentsByTask :many
+SELECT
+    c.id,
+    c.task_id,
+    c.author_id,
+    c.body,
+    c.created_at,
+    c.updated_at,
+    c.deleted_at,
+    u.email as author_email,
+    u.name as author_name,
+    u.avatar_url as author_avatar_url
+FROM comments c
+JOIN users u ON c.author_id = u.id
+JOIN tasks t ON c.task_id = t.id
+WHERE c.task_id = $1
+  AND c.deleted_at IS NULL
+  AND t.deleted_at IS NULL
+ORDER BY c.created_at ASC, c.id ASC
+LIMIT $2 OFFSET $3;
+
+-- name: CountCommentsByTask :one
+SELECT count(*)
+FROM comments c
+JOIN tasks t ON c.task_id = t.id
+WHERE c.task_id = $1
+  AND c.deleted_at IS NULL
+  AND t.deleted_at IS NULL;
+
+-- name: UpdateComment :one
+UPDATE comments
+SET body = $2, updated_at = now()
+WHERE id = $1 AND deleted_at IS NULL
+RETURNING *;
+
+-- name: SoftDeleteComment :one
+UPDATE comments
+SET deleted_at = now(), updated_at = now()
+WHERE id = $1 AND deleted_at IS NULL
+RETURNING *;
+
+-- name: ListActivitiesByProject :many
+SELECT
+    a.id,
+    a.project_id,
+    a.task_id,
+    a.actor_id,
+    a.action,
+    a.metadata,
+    a.created_at,
+    u.email as actor_email,
+    u.name as actor_name,
+    u.avatar_url as actor_avatar_url,
+    t.identifier as task_identifier,
+    t.title as task_title
+FROM activity_logs a
+JOIN users u ON a.actor_id = u.id
+LEFT JOIN tasks t ON a.task_id = t.id
+WHERE a.project_id = $1
+ORDER BY a.created_at DESC, a.id DESC
+LIMIT $2 OFFSET $3;
+
+-- name: CountActivitiesByProject :one
+SELECT count(*)
+FROM activity_logs a
+WHERE a.project_id = $1;
+
+-- name: ListActivitiesByTask :many
+SELECT
+    a.id,
+    a.project_id,
+    a.task_id,
+    a.actor_id,
+    a.action,
+    a.metadata,
+    a.created_at,
+    u.email as actor_email,
+    u.name as actor_name,
+    u.avatar_url as actor_avatar_url,
+    t.identifier as task_identifier,
+    t.title as task_title
+FROM activity_logs a
+JOIN users u ON a.actor_id = u.id
+JOIN tasks t ON a.task_id = t.id
+WHERE a.task_id = $1
+ORDER BY a.created_at DESC, a.id DESC
+LIMIT $2 OFFSET $3;
+
+-- name: CountActivitiesByTask :one
+SELECT count(*)
+FROM activity_logs a
+WHERE a.task_id = $1;

@@ -790,6 +790,27 @@ paths:
         '404':
           $ref: '#/components/responses/Error404'
 
+  /tasks/{id}/activity:
+    get:
+      tags: [activities]
+      summary: List activities for a task
+      operationId: taskActivityList
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          $ref: '#/components/responses/ActivityListEnvelope'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+
   /comments/{id}:
     patch:
       tags: [comments]

@@ -305,6 +305,7 @@ func (u *taskUsecase) UpdateTask(ctx context.Context, actorID uuid.UUID, taskID 
 	// Determine all project memberships to lock with FOR KEY SHARE before locking the task row:
 	// 1. The Actor's membership (to prevent concurrent removal of the acting user)
 	// 2. The New Assignee's membership (if task is being assigned to a user)
+	// 3. The Current Assignee's membership (if task currently has an assignee and assignee is not changing)
 	userIDsToLock := []uuid.UUID{actorID}
 	var targetAssigneeID *uuid.UUID
 	if input.SetAssignee && input.AssigneeID != nil {
@@ -312,6 +313,11 @@ func (u *taskUsecase) UpdateTask(ctx context.Context, actorID uuid.UUID, taskID 
 		targetAssigneeID = &aid
 		if aid != actorID {
 			userIDsToLock = append(userIDsToLock, aid)
+		}
+	} else if !input.SetAssignee && prelimTask.AssigneeID.Valid {
+		currAID := pgtypeToUUID(prelimTask.AssigneeID)
+		if currAID != actorID {
+			userIDsToLock = append(userIDsToLock, currAID)
 		}
 	}
 
@@ -342,8 +348,12 @@ func (u *taskUsecase) UpdateTask(ctx context.Context, actorID uuid.UUID, taskID 
 						"assignee_id": "Target user is not a member of this project",
 					})
 				}
-				// Actor was removed from project
-				return nil, domain.NewNotFoundError("Task not found")
+				if uid == actorID {
+					// Actor was removed from project
+					return nil, domain.NewNotFoundError("Task not found")
+				}
+				// Current assignee was concurrently removed and unassigned; continue under task lock
+				continue
 			}
 			return nil, domain.NewInternalError("Failed to lock project member for task update", err)
 		}

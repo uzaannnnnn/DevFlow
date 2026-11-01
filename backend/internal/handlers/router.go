@@ -69,6 +69,12 @@ func SetupRouter(cfg *config.Config, pool ...*pgxpool.Pool) *gin.Engine {
 	taskUsecase := usecases.NewTaskUsecase(p, queries)
 	taskHandler := NewTaskHandler(taskUsecase)
 
+	commentUsecase := usecases.NewCommentUsecase(p, queries)
+	commentHandler := NewCommentHandler(commentUsecase)
+
+	activityUsecase := usecases.NewActivityUsecase(p, queries)
+	activityHandler := NewActivityHandler(activityUsecase)
+
 	// API v1 route group
 	v1 := r.Group("/api/v1")
 	{
@@ -130,14 +136,31 @@ func SetupRouter(cfg *config.Config, pool ...*pgxpool.Pool) *gin.Engine {
 				// Tasks in Project (T1 & T2)
 				projects.GET("/:id/tasks", taskHandler.List)
 				projects.POST("/:id/tasks", taskHandler.Create)
+
+				// Activities in Project (AC1)
+				projects.GET("/:id/activities", activityHandler.ListProject)
 			}
 
-			// Tasks (T3, T4, T5)
+			// Tasks (T3, T4, T5, C1, C2, AC2)
 			tasks := protected.Group("/tasks")
 			{
 				tasks.GET("/:id", taskHandler.Get)
 				tasks.PATCH("/:id", taskHandler.Update)
 				tasks.DELETE("/:id", taskHandler.Delete)
+
+				// Task Comments (C1 & C2)
+				tasks.GET("/:id/comments", commentHandler.List)
+				tasks.POST("/:id/comments", commentHandler.Create)
+
+				// Task Activity History (AC2)
+				tasks.GET("/:id/activity", activityHandler.ListTask)
+			}
+
+			// Comments (C3 & C4)
+			comments := protected.Group("/comments")
+			{
+				comments.PATCH("/:id", commentHandler.Update)
+				comments.DELETE("/:id", commentHandler.Delete)
 			}
 		}
 	}
