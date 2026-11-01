@@ -22,8 +22,11 @@ type Config struct {
 	// Graceful shutdown timeout
 	ShutdownTimeout time.Duration
 
-	// Database connection string (PostgreSQL 14+)
+	// Database connection string (PostgreSQL 14+) - pooled connection for app queries
 	DatabaseURL string
+
+	// Database connection string (direct unpooled) for schema migrations
+	DatabaseURLUnpooled string
 
 	// JWT signing secret (minimum 32 bytes)
 	JWTSecret string
@@ -52,11 +55,12 @@ const (
 // Load reads configuration from environment variables, optionally loading from a .env file if present.
 // If filenames are passed, it will attempt to load from those files.
 func Load(envFiles ...string) (*Config, error) {
-	// Load .env file if available (ignore error if file does not exist)
+	// Load environment file(s). When none are specified, attempt to load .env.local (tooling overrides)
+	// then .env from either current directory or parent directory (when executing from backend/).
 	if len(envFiles) > 0 {
 		_ = godotenv.Load(envFiles...)
 	} else {
-		_ = godotenv.Load()
+		_ = godotenv.Load(".env.local", ".env", "../.env.local", "../.env")
 	}
 
 	appEnv := getEnv("APP_ENV", DefaultAppEnv)
@@ -64,6 +68,7 @@ func Load(envFiles ...string) (*Config, error) {
 	port := getEnv("PORT", DefaultPort)
 
 	dbURL := getEnv("DATABASE_URL", DefaultDBURL)
+	dbURLUnpooled := getEnv("DATABASE_URL_UNPOOLED", dbURL)
 
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" && appEnv != "production" {
@@ -104,7 +109,8 @@ func Load(envFiles ...string) (*Config, error) {
 		AppEnv:             appEnv,
 		Port:               port,
 		ShutdownTimeout:    5 * time.Second,
-		DatabaseURL:        dbURL,
+		DatabaseURL:         dbURL,
+		DatabaseURLUnpooled: dbURLUnpooled,
 		JWTSecret:          jwtSecret,
 		JWTAccessTTL:       jwtAccessTTL,
 		RefreshTokenTTL:    refreshTokenTTL,

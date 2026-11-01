@@ -30,6 +30,11 @@ func main() {
 		log.Fatalf("FATAL: Failed to load config: %v", err)
 	}
 
+	targetDBURL := cfg.DatabaseURLUnpooled
+	if targetDBURL == "" {
+		targetDBURL = cfg.DatabaseURL
+	}
+
 	// Resolve migrations directory relative to cwd
 	absDir, err := filepath.Abs(migrationsDir)
 	if err != nil {
@@ -39,21 +44,21 @@ func main() {
 	switch command {
 	case "up":
 		log.Printf("INFO: Applying migrations UP from %s...", absDir)
-		if err := repository.RunMigrationsUp(cfg.DatabaseURL, absDir); err != nil {
+		if err := repository.RunMigrationsUp(targetDBURL, absDir); err != nil {
 			log.Fatalf("FATAL: Migration UP failed: %v", err)
 		}
-		ver, dirty, _ := repository.MigrationVersion(cfg.DatabaseURL, absDir)
+		ver, dirty, _ := repository.MigrationVersion(targetDBURL, absDir)
 		log.Printf("SUCCESS: Migrations applied successfully. Current version: %d (dirty: %v)", ver, dirty)
 
 	case "down":
 		log.Printf("INFO: Reverting migrations DOWN from %s...", absDir)
-		if err := repository.RunMigrationsDown(cfg.DatabaseURL, absDir); err != nil {
+		if err := repository.RunMigrationsDown(targetDBURL, absDir); err != nil {
 			log.Fatalf("FATAL: Migration DOWN failed: %v", err)
 		}
 		log.Printf("SUCCESS: Migrations reverted successfully.")
 
 	case "version":
-		ver, dirty, err := repository.MigrationVersion(cfg.DatabaseURL, absDir)
+		ver, dirty, err := repository.MigrationVersion(targetDBURL, absDir)
 		if err != nil {
 			log.Fatalf("FATAL: Failed to get migration version: %v", err)
 		}
