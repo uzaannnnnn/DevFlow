@@ -3,6 +3,7 @@ import { useProject } from '../useProjects';
 import { canUpdateProject } from '../types';
 import { ProjectMembersView } from './ProjectMembersView';
 import { ProjectSettingsView } from './ProjectSettingsView';
+import { ProjectActivityFeed } from './ProjectActivityFeed';
 import { TaskListView } from '../../tasks/components/TaskListView';
 import { LoadingSpinner } from '../../../shared/ui/LoadingSpinner';
 import {
@@ -14,6 +15,7 @@ import {
   User,
   Hash,
   AlertCircle,
+  Activity,
 } from 'lucide-react';
 
 export interface ProjectDetailViewProps {
@@ -21,7 +23,7 @@ export interface ProjectDetailViewProps {
   onBack: () => void;
 }
 
-type ProjectTab = 'tasks' | 'members' | 'settings';
+type ProjectTab = 'tasks' | 'members' | 'activity' | 'settings';
 
 export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
   projectId,
@@ -159,6 +161,20 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
             <span>Members</span>
           </button>
 
+          <button
+            type="button"
+            onClick={() => setActiveTab('activity')}
+            className={`py-3 px-1 border-b-2 font-medium flex items-center gap-2 transition-colors ${
+              activeTab === 'activity'
+                ? 'border-indigo-500 text-indigo-400'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
+            }`}
+            data-testid="project-tab-activity"
+          >
+            <Activity className="w-4 h-4" />
+            <span>Activity</span>
+          </button>
+
           {canManage && (
             <button
               type="button"
@@ -188,6 +204,10 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
           onMemberChanged={() => refetch()}
           onProjectLeft={onBack}
         />
+      )}
+
+      {activeTab === 'activity' && (
+        <ProjectActivityFeed projectId={project.id} />
       )}
 
       {activeTab === 'settings' && canManage && (

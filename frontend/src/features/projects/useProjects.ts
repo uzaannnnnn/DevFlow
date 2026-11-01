@@ -3,6 +3,7 @@ import { projectApi } from './api';
 import {
   Project,
   ProjectMember,
+  ActivityItem,
   CreateProjectInput,
   UpdateProjectInput,
   AddProjectMemberInput,
@@ -16,6 +17,8 @@ export const projectKeys = {
     ['workspaces', workspaceId, 'projects', { search: search || '' }] as const,
   detail: (projectId: string) => ['projects', projectId] as const,
   members: (projectId: string) => ['projects', projectId, 'members'] as const,
+  activities: (projectId: string, params?: { page?: number; page_size?: number }) =>
+    ['projects', projectId, 'activities', params || {}] as const,
 };
 
 export function useProjects(workspaceId?: string, search?: string) {
@@ -162,3 +165,19 @@ export function useRemoveProjectMemberMutation(projectId: string) {
     },
   });
 }
+
+export function useProjectActivities(
+  projectId?: string,
+  params?: { page?: number; page_size?: number }
+) {
+  return useQuery<{ activities: ActivityItem[]; total: number }, ApiClientError>({
+    queryKey: projectKeys.activities(projectId || '', params),
+    queryFn: async () => {
+      if (!projectId) return { activities: [], total: 0 };
+      const res = await projectApi.listActivities(projectId, params);
+      return res.data;
+    },
+    enabled: Boolean(projectId),
+  });
+}
+

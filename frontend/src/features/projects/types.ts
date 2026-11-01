@@ -93,3 +93,24 @@ export const canRemoveProjectMember = (
   }
   return false;
 };
+
+export interface ActivityActor {
+  id: string;
+  email: string;
+  name?: string | null;
+  avatar_url?: string | null;
+}
+
+export interface ActivityItem {
+  id: string;
+  project_id: string;
+  task_id?: string | null;
+  task_identifier?: string | null;
+  task_title?: string | null;
+  actor_id: string;
+  actor: ActivityActor;
+  action: string;
+  metadata?: Record<string, any> | null;
+  created_at: string;
+}
+

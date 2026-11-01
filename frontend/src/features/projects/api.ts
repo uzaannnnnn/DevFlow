@@ -2,6 +2,7 @@ import { apiClient, ApiResponse } from '../../shared/lib/api-client';
 import {
   Project,
   ProjectMember,
+  ActivityItem,
   CreateProjectInput,
   UpdateProjectInput,
   AddProjectMemberInput,
@@ -79,6 +80,16 @@ export const projectApi = {
   ): Promise<ApiResponse<{ message: string }>> => {
     return apiClient.delete<{ message: string }>(
       `api/v1/projects/${projectId}/members/${userId}`
+    );
+  },
+
+  listActivities: (
+    projectId: string,
+    params?: { page?: number; page_size?: number }
+  ): Promise<ApiResponse<{ activities: ActivityItem[]; total: number }>> => {
+    return apiClient.get<{ activities: ActivityItem[]; total: number }>(
+      `api/v1/projects/${projectId}/activities`,
+      { params }
     );
   },
 };

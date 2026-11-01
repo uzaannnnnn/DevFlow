@@ -21,6 +21,7 @@ vi.mock('../api', () => ({
     listMembers: vi.fn(),
     updateProject: vi.fn(),
     archiveProject: vi.fn(),
+    listActivities: vi.fn(),
   },
 }));
 
@@ -72,6 +73,11 @@ describe('ProjectDetailView Component', () => {
       data: { members: [] },
       meta: null,
     });
+    vi.mocked(projectApi.listActivities).mockResolvedValue({
+      success: true,
+      data: { activities: [], total: 0 },
+      meta: null,
+    });
   });
 
   const renderComponent = (projectId = 'proj-1') => {
@@ -114,6 +120,21 @@ describe('ProjectDetailView Component', () => {
     const keyInput = screen.getByDisplayValue('CORE');
     expect(keyInput).toHaveAttribute('readOnly');
     expect(keyInput).toBeDisabled();
+  });
+
+  it('allows navigating to Activity tab and displays activity feed', async () => {
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByText('Core Engine')).toBeInTheDocument();
+    });
+
+    const activityTab = screen.getByTestId('project-tab-activity');
+    fireEvent.click(activityTab);
+
+    await waitFor(() => {
+      expect(screen.getByText('No activity yet')).toBeInTheDocument();
+    });
   });
 
   it('renders 404 access withholding error message when project cannot be accessed', async () => {
