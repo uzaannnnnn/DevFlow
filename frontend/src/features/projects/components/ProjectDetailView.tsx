@@ -3,6 +3,7 @@ import { useProject } from '../useProjects';
 import { canUpdateProject } from '../types';
 import { ProjectMembersView } from './ProjectMembersView';
 import { ProjectSettingsView } from './ProjectSettingsView';
+import { TaskListView } from '../../tasks/components/TaskListView';
 import { LoadingSpinner } from '../../../shared/ui/LoadingSpinner';
 import {
   ArrowLeft,
@@ -178,21 +179,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
 
       {/* Tab Content */}
       {activeTab === 'tasks' && (
-        <div className="bg-slate-950/40 border border-slate-800 rounded-xl p-8 text-center space-y-4">
-          <div className="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center mx-auto border border-indigo-500/20">
-            <CheckSquare className="w-6 h-6" />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-slate-200">Tasks & Kanban Board</h3>
-            <p className="mt-1 text-sm text-slate-400 max-w-md mx-auto">
-              Sprint 2 Phase 3 establishes the Project Management foundation. Task creation, Kanban boards, and issue tracking will be unlocked in <strong>Sprint 2 Phase 4</strong>.
-            </p>
-          </div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono bg-slate-900 border border-slate-800 text-slate-400">
-            <span>Next Task Identifier:</span>
-            <strong className="text-indigo-400 font-bold">{project.key}-{(project.task_counter || 0) + 1}</strong>
-          </div>
-        </div>
+        <TaskListView project={project} />
       )}
 
       {activeTab === 'members' && (

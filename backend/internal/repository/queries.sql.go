@@ -100,6 +100,42 @@ func (q *Queries) CountProjectOwners(ctx context.Context, projectID pgtype.UUID)
 	return count, err
 }
 
+const countTasksByProject = `-- name: CountTasksByProject :one
+SELECT count(*)
+FROM tasks t
+WHERE t.project_id = $1
+  AND t.deleted_at IS NULL
+  AND ($2::text IS NULL OR t.status = $2)
+  AND ($3::text IS NULL OR t.priority = $3)
+  AND ($4::uuid IS NULL OR t.assignee_id = $4)
+  AND (
+      $5::text IS NULL OR
+      t.title ILIKE '%' || $5::text || '%' OR
+      t.identifier ILIKE '%' || $5::text || '%'
+  )
+`
+
+type CountTasksByProjectParams struct {
+	ProjectID  pgtype.UUID `json:"project_id"`
+	Status     pgtype.Text `json:"status"`
+	Priority   pgtype.Text `json:"priority"`
+	AssigneeID pgtype.UUID `json:"assignee_id"`
+	Search     pgtype.Text `json:"search"`
+}
+
+func (q *Queries) CountTasksByProject(ctx context.Context, arg CountTasksByProjectParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countTasksByProject,
+		arg.ProjectID,
+		arg.Status,
+		arg.Priority,
+		arg.AssigneeID,
+		arg.Search,
+	)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countWorkspaceOwners = `-- name: CountWorkspaceOwners :one
 SELECT count(*)::bigint FROM workspace_members
 WHERE workspace_id = $1 AND role = 'owner'
@@ -189,6 +225,100 @@ func (q *Queries) CreateRefreshSession(ctx context.Context, arg CreateRefreshSes
 		&i.TokenHash,
 		&i.ExpiresAt,
 		&i.RevokedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const createTask = `-- name: CreateTask :one
+INSERT INTO tasks (
+    id, project_id, identifier, title, description,
+    status, priority, assignee_id, due_date, created_by,
+    created_at, updated_at
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, now(), now()
+)
+RETURNING id, project_id, identifier, title, description, status, priority, assignee_id, due_date, created_by, created_at, updated_at, deleted_at
+`
+
+type CreateTaskParams struct {
+	ID          pgtype.UUID        `json:"id"`
+	ProjectID   pgtype.UUID        `json:"project_id"`
+	Identifier  string             `json:"identifier"`
+	Title       string             `json:"title"`
+	Description pgtype.Text        `json:"description"`
+	Status      string             `json:"status"`
+	Priority    string             `json:"priority"`
+	AssigneeID  pgtype.UUID        `json:"assignee_id"`
+	DueDate     pgtype.Timestamptz `json:"due_date"`
+	CreatedBy   pgtype.UUID        `json:"created_by"`
+}
+
+func (q *Queries) CreateTask(ctx context.Context, arg CreateTaskParams) (Task, error) {
+	row := q.db.QueryRow(ctx, createTask,
+		arg.ID,
+		arg.ProjectID,
+		arg.Identifier,
+		arg.Title,
+		arg.Description,
+		arg.Status,
+		arg.Priority,
+		arg.AssigneeID,
+		arg.DueDate,
+		arg.CreatedBy,
+	)
+	var i Task
+	err := row.Scan(
+		&i.ID,
+		&i.ProjectID,
+		&i.Identifier,
+		&i.Title,
+		&i.Description,
+		&i.Status,
+		&i.Priority,
+		&i.AssigneeID,
+		&i.DueDate,
+		&i.CreatedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
+const createTaskActivityLog = `-- name: CreateTaskActivityLog :one
+INSERT INTO activity_logs (
+    id, project_id, task_id, actor_id, action, metadata, created_at
+) VALUES (
+    gen_random_uuid(), $1, $2, $3, $4, $5, now()
+)
+RETURNING id, project_id, task_id, actor_id, action, metadata, created_at
+`
+
+type CreateTaskActivityLogParams struct {
+	ProjectID pgtype.UUID `json:"project_id"`
+	TaskID    pgtype.UUID `json:"task_id"`
+	ActorID   pgtype.UUID `json:"actor_id"`
+	Action    string      `json:"action"`
+	Metadata  []byte      `json:"metadata"`
+}
+
+func (q *Queries) CreateTaskActivityLog(ctx context.Context, arg CreateTaskActivityLogParams) (ActivityLog, error) {
+	row := q.db.QueryRow(ctx, createTaskActivityLog,
+		arg.ProjectID,
+		arg.TaskID,
+		arg.ActorID,
+		arg.Action,
+		arg.Metadata,
+	)
+	var i ActivityLog
+	err := row.Scan(
+		&i.ID,
+		&i.ProjectID,
+		&i.TaskID,
+		&i.ActorID,
+		&i.Action,
+		&i.Metadata,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -494,16 +624,90 @@ func (q *Queries) GetRefreshSessionByTokenHashForUpdate(ctx context.Context, tok
 }
 
 const getTaskByID = `-- name: GetTaskByID :one
-
-SELECT id, project_id, identifier, title, description, status, priority, assignee_id, due_date, created_by, created_at, updated_at, deleted_at FROM tasks
-WHERE id = $1 AND deleted_at IS NULL LIMIT 1
+SELECT
+    t.id,
+    t.project_id,
+    t.identifier,
+    t.title,
+    t.description,
+    t.status,
+    t.priority,
+    t.assignee_id,
+    t.due_date,
+    t.created_by,
+    t.created_at,
+    t.updated_at,
+    t.deleted_at,
+    u_assignee.email as assignee_email,
+    u_assignee.name as assignee_name,
+    u_assignee.avatar_url as assignee_avatar_url,
+    u_creator.email as creator_email,
+    u_creator.name as creator_name,
+    u_creator.avatar_url as creator_avatar_url
+FROM tasks t
+LEFT JOIN users u_assignee ON t.assignee_id = u_assignee.id
+JOIN users u_creator ON t.created_by = u_creator.id
+WHERE t.id = $1 AND t.deleted_at IS NULL
+LIMIT 1
 `
 
-// ============================================================================
-// Task Basic Stubs
-// ============================================================================
-func (q *Queries) GetTaskByID(ctx context.Context, id pgtype.UUID) (Task, error) {
+type GetTaskByIDRow struct {
+	ID                pgtype.UUID        `json:"id"`
+	ProjectID         pgtype.UUID        `json:"project_id"`
+	Identifier        string             `json:"identifier"`
+	Title             string             `json:"title"`
+	Description       pgtype.Text        `json:"description"`
+	Status            string             `json:"status"`
+	Priority          string             `json:"priority"`
+	AssigneeID        pgtype.UUID        `json:"assignee_id"`
+	DueDate           pgtype.Timestamptz `json:"due_date"`
+	CreatedBy         pgtype.UUID        `json:"created_by"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt         pgtype.Timestamptz `json:"deleted_at"`
+	AssigneeEmail     pgtype.Text        `json:"assignee_email"`
+	AssigneeName      pgtype.Text        `json:"assignee_name"`
+	AssigneeAvatarUrl pgtype.Text        `json:"assignee_avatar_url"`
+	CreatorEmail      string             `json:"creator_email"`
+	CreatorName       pgtype.Text        `json:"creator_name"`
+	CreatorAvatarUrl  pgtype.Text        `json:"creator_avatar_url"`
+}
+
+func (q *Queries) GetTaskByID(ctx context.Context, id pgtype.UUID) (GetTaskByIDRow, error) {
 	row := q.db.QueryRow(ctx, getTaskByID, id)
+	var i GetTaskByIDRow
+	err := row.Scan(
+		&i.ID,
+		&i.ProjectID,
+		&i.Identifier,
+		&i.Title,
+		&i.Description,
+		&i.Status,
+		&i.Priority,
+		&i.AssigneeID,
+		&i.DueDate,
+		&i.CreatedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.AssigneeEmail,
+		&i.AssigneeName,
+		&i.AssigneeAvatarUrl,
+		&i.CreatorEmail,
+		&i.CreatorName,
+		&i.CreatorAvatarUrl,
+	)
+	return i, err
+}
+
+const getTaskByIDForUpdate = `-- name: GetTaskByIDForUpdate :one
+SELECT id, project_id, identifier, title, description, status, priority, assignee_id, due_date, created_by, created_at, updated_at, deleted_at FROM tasks
+WHERE id = $1 AND deleted_at IS NULL
+FOR UPDATE LIMIT 1
+`
+
+func (q *Queries) GetTaskByIDForUpdate(ctx context.Context, id pgtype.UUID) (Task, error) {
+	row := q.db.QueryRow(ctx, getTaskByIDForUpdate, id)
 	var i Task
 	err := row.Scan(
 		&i.ID,
@@ -714,6 +918,29 @@ func (q *Queries) GetWorkspaceMembersForUpdateDeterministic(ctx context.Context,
 	return items, nil
 }
 
+const incrementProjectTaskCounter = `-- name: IncrementProjectTaskCounter :one
+
+UPDATE projects
+SET task_counter = task_counter + 1, updated_at = now()
+WHERE id = $1 AND deleted_at IS NULL
+RETURNING task_counter, key
+`
+
+type IncrementProjectTaskCounterRow struct {
+	TaskCounter int32  `json:"task_counter"`
+	Key         string `json:"key"`
+}
+
+// ============================================================================
+// Task Management Queries
+// ============================================================================
+func (q *Queries) IncrementProjectTaskCounter(ctx context.Context, id pgtype.UUID) (IncrementProjectTaskCounterRow, error) {
+	row := q.db.QueryRow(ctx, incrementProjectTaskCounter, id)
+	var i IncrementProjectTaskCounterRow
+	err := row.Scan(&i.TaskCounter, &i.Key)
+	return i, err
+}
+
 const listActiveUserRefreshSessions = `-- name: ListActiveUserRefreshSessions :many
 SELECT id, user_id, token_hash, expires_at, revoked_at, created_at FROM refresh_sessions
 WHERE user_id = $1 AND revoked_at IS NULL AND expires_at > now()
@@ -887,6 +1114,124 @@ func (q *Queries) ListProjectsByWorkspaceAndUser(ctx context.Context, arg ListPr
 	return items, nil
 }
 
+const listTasksByProject = `-- name: ListTasksByProject :many
+SELECT
+    t.id,
+    t.project_id,
+    t.identifier,
+    t.title,
+    t.description,
+    t.status,
+    t.priority,
+    t.assignee_id,
+    t.due_date,
+    t.created_by,
+    t.created_at,
+    t.updated_at,
+    t.deleted_at,
+    u_assignee.email as assignee_email,
+    u_assignee.name as assignee_name,
+    u_assignee.avatar_url as assignee_avatar_url,
+    u_creator.email as creator_email,
+    u_creator.name as creator_name,
+    u_creator.avatar_url as creator_avatar_url
+FROM tasks t
+LEFT JOIN users u_assignee ON t.assignee_id = u_assignee.id
+JOIN users u_creator ON t.created_by = u_creator.id
+WHERE t.project_id = $1
+  AND t.deleted_at IS NULL
+  AND ($4::text IS NULL OR t.status = $4)
+  AND ($5::text IS NULL OR t.priority = $5)
+  AND ($6::uuid IS NULL OR t.assignee_id = $6)
+  AND (
+      $7::text IS NULL OR
+      t.title ILIKE '%' || $7::text || '%' OR
+      t.identifier ILIKE '%' || $7::text || '%'
+  )
+ORDER BY t.created_at DESC
+LIMIT $2 OFFSET $3
+`
+
+type ListTasksByProjectParams struct {
+	ProjectID  pgtype.UUID `json:"project_id"`
+	Limit      int32       `json:"limit"`
+	Offset     int32       `json:"offset"`
+	Status     pgtype.Text `json:"status"`
+	Priority   pgtype.Text `json:"priority"`
+	AssigneeID pgtype.UUID `json:"assignee_id"`
+	Search     pgtype.Text `json:"search"`
+}
+
+type ListTasksByProjectRow struct {
+	ID                pgtype.UUID        `json:"id"`
+	ProjectID         pgtype.UUID        `json:"project_id"`
+	Identifier        string             `json:"identifier"`
+	Title             string             `json:"title"`
+	Description       pgtype.Text        `json:"description"`
+	Status            string             `json:"status"`
+	Priority          string             `json:"priority"`
+	AssigneeID        pgtype.UUID        `json:"assignee_id"`
+	DueDate           pgtype.Timestamptz `json:"due_date"`
+	CreatedBy         pgtype.UUID        `json:"created_by"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt         pgtype.Timestamptz `json:"deleted_at"`
+	AssigneeEmail     pgtype.Text        `json:"assignee_email"`
+	AssigneeName      pgtype.Text        `json:"assignee_name"`
+	AssigneeAvatarUrl pgtype.Text        `json:"assignee_avatar_url"`
+	CreatorEmail      string             `json:"creator_email"`
+	CreatorName       pgtype.Text        `json:"creator_name"`
+	CreatorAvatarUrl  pgtype.Text        `json:"creator_avatar_url"`
+}
+
+func (q *Queries) ListTasksByProject(ctx context.Context, arg ListTasksByProjectParams) ([]ListTasksByProjectRow, error) {
+	rows, err := q.db.Query(ctx, listTasksByProject,
+		arg.ProjectID,
+		arg.Limit,
+		arg.Offset,
+		arg.Status,
+		arg.Priority,
+		arg.AssigneeID,
+		arg.Search,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListTasksByProjectRow
+	for rows.Next() {
+		var i ListTasksByProjectRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.ProjectID,
+			&i.Identifier,
+			&i.Title,
+			&i.Description,
+			&i.Status,
+			&i.Priority,
+			&i.AssigneeID,
+			&i.DueDate,
+			&i.CreatedBy,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+			&i.AssigneeEmail,
+			&i.AssigneeName,
+			&i.AssigneeAvatarUrl,
+			&i.CreatorEmail,
+			&i.CreatorName,
+			&i.CreatorAvatarUrl,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listWorkspaceMembers = `-- name: ListWorkspaceMembers :many
 SELECT 
     wm.id,
@@ -1000,6 +1345,31 @@ func (q *Queries) ListWorkspacesByUserID(ctx context.Context, userID pgtype.UUID
 		return nil, err
 	}
 	return items, nil
+}
+
+const lockProjectMemberForKeyShare = `-- name: LockProjectMemberForKeyShare :one
+SELECT id, project_id, workspace_id, user_id, role, created_at FROM project_members
+WHERE project_id = $1 AND user_id = $2
+FOR KEY SHARE LIMIT 1
+`
+
+type LockProjectMemberForKeyShareParams struct {
+	ProjectID pgtype.UUID `json:"project_id"`
+	UserID    pgtype.UUID `json:"user_id"`
+}
+
+func (q *Queries) LockProjectMemberForKeyShare(ctx context.Context, arg LockProjectMemberForKeyShareParams) (ProjectMember, error) {
+	row := q.db.QueryRow(ctx, lockProjectMemberForKeyShare, arg.ProjectID, arg.UserID)
+	var i ProjectMember
+	err := row.Scan(
+		&i.ID,
+		&i.ProjectID,
+		&i.WorkspaceID,
+		&i.UserID,
+		&i.Role,
+		&i.CreatedAt,
+	)
+	return i, err
 }
 
 const lockTasksForDepartingProjectMember = `-- name: LockTasksForDepartingProjectMember :many
@@ -1123,6 +1493,34 @@ func (q *Queries) SoftDeleteProject(ctx context.Context, id pgtype.UUID) (Projec
 		&i.Name,
 		&i.Description,
 		&i.TaskCounter,
+		&i.CreatedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
+const softDeleteTask = `-- name: SoftDeleteTask :one
+UPDATE tasks
+SET deleted_at = now(), updated_at = now()
+WHERE id = $1 AND deleted_at IS NULL
+RETURNING id, project_id, identifier, title, description, status, priority, assignee_id, due_date, created_by, created_at, updated_at, deleted_at
+`
+
+func (q *Queries) SoftDeleteTask(ctx context.Context, id pgtype.UUID) (Task, error) {
+	row := q.db.QueryRow(ctx, softDeleteTask, id)
+	var i Task
+	err := row.Scan(
+		&i.ID,
+		&i.ProjectID,
+		&i.Identifier,
+		&i.Title,
+		&i.Description,
+		&i.Status,
+		&i.Priority,
+		&i.AssigneeID,
+		&i.DueDate,
 		&i.CreatedBy,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -1323,6 +1721,74 @@ func (q *Queries) UpdateProjectMemberRole(ctx context.Context, arg UpdateProject
 		&i.UserID,
 		&i.Role,
 		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const updateTask = `-- name: UpdateTask :one
+UPDATE tasks
+SET
+    title = coalesce($1, title),
+    description = CASE
+        WHEN $2::boolean THEN $3
+        ELSE description
+    END,
+    status = coalesce($4, status),
+    priority = coalesce($5, priority),
+    assignee_id = CASE
+        WHEN $6::boolean THEN $7
+        ELSE assignee_id
+    END,
+    due_date = CASE
+        WHEN $8::boolean THEN $9
+        ELSE due_date
+    END,
+    updated_at = now()
+WHERE id = $10 AND deleted_at IS NULL
+RETURNING id, project_id, identifier, title, description, status, priority, assignee_id, due_date, created_by, created_at, updated_at, deleted_at
+`
+
+type UpdateTaskParams struct {
+	Title          pgtype.Text        `json:"title"`
+	SetDescription bool               `json:"set_description"`
+	Description    pgtype.Text        `json:"description"`
+	Status         pgtype.Text        `json:"status"`
+	Priority       pgtype.Text        `json:"priority"`
+	SetAssignee    bool               `json:"set_assignee"`
+	AssigneeID     pgtype.UUID        `json:"assignee_id"`
+	SetDueDate     bool               `json:"set_due_date"`
+	DueDate        pgtype.Timestamptz `json:"due_date"`
+	ID             pgtype.UUID        `json:"id"`
+}
+
+func (q *Queries) UpdateTask(ctx context.Context, arg UpdateTaskParams) (Task, error) {
+	row := q.db.QueryRow(ctx, updateTask,
+		arg.Title,
+		arg.SetDescription,
+		arg.Description,
+		arg.Status,
+		arg.Priority,
+		arg.SetAssignee,
+		arg.AssigneeID,
+		arg.SetDueDate,
+		arg.DueDate,
+		arg.ID,
+	)
+	var i Task
+	err := row.Scan(
+		&i.ID,
+		&i.ProjectID,
+		&i.Identifier,
+		&i.Title,
+		&i.Description,
+		&i.Status,
+		&i.Priority,
+		&i.AssigneeID,
+		&i.DueDate,
+		&i.CreatedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return i, err
 }

@@ -24,6 +24,16 @@ vi.mock('../api', () => ({
   },
 }));
 
+vi.mock('../../tasks/api', () => ({
+  taskApi: {
+    listTasks: vi.fn(() => Promise.resolve({ success: true, data: { tasks: [], total: 0 }, meta: null })),
+    getTask: vi.fn(),
+    createTask: vi.fn(),
+    updateTask: vi.fn(),
+    deleteTask: vi.fn(),
+  },
+}));
+
 const mockWorkspace: Workspace = {
   id: 'ws-100',
   name: 'Acme Corp',
@@ -81,10 +91,9 @@ describe('ProjectDetailView Component', () => {
       expect(screen.getByText('Foundational backend service')).toBeInTheDocument();
     });
 
-    // Default Tasks Tab notice
-    expect(screen.getByText(/Tasks & Kanban Board/i)).toBeInTheDocument();
-    expect(screen.getByText(/Sprint 2 Phase 4/i)).toBeInTheDocument();
-    expect(screen.getByText('CORE-8')).toBeInTheDocument(); // 7 + 1
+    // Default Tasks Tab renders TaskListView with New Task button
+    expect(screen.getByTestId('open-create-task-modal-button')).toBeInTheDocument();
+    expect(screen.getByTestId('search-tasks-input')).toBeInTheDocument();
   });
 
   it('allows navigating to Settings tab and verifies Decision 6 key immutability', async () => {

@@ -358,9 +358,145 @@ FROM unassigned_tasks u
 RETURNING task_id;
 
 -- ============================================================================
--- Task Basic Stubs
+-- Task Management Queries
 -- ============================================================================
 
+-- name: IncrementProjectTaskCounter :one
+UPDATE projects
+SET task_counter = task_counter + 1, updated_at = now()
+WHERE id = $1 AND deleted_at IS NULL
+RETURNING task_counter, key;
+
+-- name: LockProjectMemberForKeyShare :one
+SELECT id, project_id, workspace_id, user_id, role, created_at FROM project_members
+WHERE project_id = $1 AND user_id = $2
+FOR KEY SHARE LIMIT 1;
+
+-- name: CreateTask :one
+INSERT INTO tasks (
+    id, project_id, identifier, title, description,
+    status, priority, assignee_id, due_date, created_by,
+    created_at, updated_at
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, now(), now()
+)
+RETURNING *;
+
+-- name: CreateTaskActivityLog :one
+INSERT INTO activity_logs (
+    id, project_id, task_id, actor_id, action, metadata, created_at
+) VALUES (
+    gen_random_uuid(), $1, $2, $3, $4, $5, now()
+)
+RETURNING *;
+
 -- name: GetTaskByID :one
+SELECT
+    t.id,
+    t.project_id,
+    t.identifier,
+    t.title,
+    t.description,
+    t.status,
+    t.priority,
+    t.assignee_id,
+    t.due_date,
+    t.created_by,
+    t.created_at,
+    t.updated_at,
+    t.deleted_at,
+    u_assignee.email as assignee_email,
+    u_assignee.name as assignee_name,
+    u_assignee.avatar_url as assignee_avatar_url,
+    u_creator.email as creator_email,
+    u_creator.name as creator_name,
+    u_creator.avatar_url as creator_avatar_url
+FROM tasks t
+LEFT JOIN users u_assignee ON t.assignee_id = u_assignee.id
+JOIN users u_creator ON t.created_by = u_creator.id
+WHERE t.id = $1 AND t.deleted_at IS NULL
+LIMIT 1;
+
+-- name: GetTaskByIDForUpdate :one
 SELECT * FROM tasks
-WHERE id = $1 AND deleted_at IS NULL LIMIT 1;
+WHERE id = $1 AND deleted_at IS NULL
+FOR UPDATE LIMIT 1;
+
+-- name: ListTasksByProject :many
+SELECT
+    t.id,
+    t.project_id,
+    t.identifier,
+    t.title,
+    t.description,
+    t.status,
+    t.priority,
+    t.assignee_id,
+    t.due_date,
+    t.created_by,
+    t.created_at,
+    t.updated_at,
+    t.deleted_at,
+    u_assignee.email as assignee_email,
+    u_assignee.name as assignee_name,
+    u_assignee.avatar_url as assignee_avatar_url,
+    u_creator.email as creator_email,
+    u_creator.name as creator_name,
+    u_creator.avatar_url as creator_avatar_url
+FROM tasks t
+LEFT JOIN users u_assignee ON t.assignee_id = u_assignee.id
+JOIN users u_creator ON t.created_by = u_creator.id
+WHERE t.project_id = $1
+  AND t.deleted_at IS NULL
+  AND (sqlc.narg('status')::text IS NULL OR t.status = sqlc.narg('status'))
+  AND (sqlc.narg('priority')::text IS NULL OR t.priority = sqlc.narg('priority'))
+  AND (sqlc.narg('assignee_id')::uuid IS NULL OR t.assignee_id = sqlc.narg('assignee_id'))
+  AND (
+      sqlc.narg('search')::text IS NULL OR
+      t.title ILIKE '%' || sqlc.narg('search')::text || '%' OR
+      t.identifier ILIKE '%' || sqlc.narg('search')::text || '%'
+  )
+ORDER BY t.created_at DESC
+LIMIT $2 OFFSET $3;
+
+-- name: CountTasksByProject :one
+SELECT count(*)
+FROM tasks t
+WHERE t.project_id = $1
+  AND t.deleted_at IS NULL
+  AND (sqlc.narg('status')::text IS NULL OR t.status = sqlc.narg('status'))
+  AND (sqlc.narg('priority')::text IS NULL OR t.priority = sqlc.narg('priority'))
+  AND (sqlc.narg('assignee_id')::uuid IS NULL OR t.assignee_id = sqlc.narg('assignee_id'))
+  AND (
+      sqlc.narg('search')::text IS NULL OR
+      t.title ILIKE '%' || sqlc.narg('search')::text || '%' OR
+      t.identifier ILIKE '%' || sqlc.narg('search')::text || '%'
+  );
+
+-- name: UpdateTask :one
+UPDATE tasks
+SET
+    title = coalesce(sqlc.narg('title'), title),
+    description = CASE
+        WHEN sqlc.arg('set_description')::boolean THEN sqlc.narg('description')
+        ELSE description
+    END,
+    status = coalesce(sqlc.narg('status'), status),
+    priority = coalesce(sqlc.narg('priority'), priority),
+    assignee_id = CASE
+        WHEN sqlc.arg('set_assignee')::boolean THEN sqlc.narg('assignee_id')
+        ELSE assignee_id
+    END,
+    due_date = CASE
+        WHEN sqlc.arg('set_due_date')::boolean THEN sqlc.narg('due_date')
+        ELSE due_date
+    END,
+    updated_at = now()
+WHERE id = sqlc.arg('id') AND deleted_at IS NULL
+RETURNING *;
+
+-- name: SoftDeleteTask :one
+UPDATE tasks
+SET deleted_at = now(), updated_at = now()
+WHERE id = $1 AND deleted_at IS NULL
+RETURNING *;

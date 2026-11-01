@@ -38,6 +38,16 @@ vi.mock('../../features/projects/api', () => ({
   },
 }));
 
+vi.mock('../../features/tasks/api', () => ({
+  taskApi: {
+    listTasks: vi.fn(() => Promise.resolve({ success: true, data: { tasks: [], total: 0 }, meta: null })),
+    getTask: vi.fn(),
+    createTask: vi.fn(),
+    updateTask: vi.fn(),
+    deleteTask: vi.fn(),
+  },
+}));
+
 const mockWorkspaces: Workspace[] = [
   {
     id: 'ws-1',
@@ -162,7 +172,7 @@ describe('HomePage Component & Workspace Switching Invariants', () => {
     // 4. Verify ProjectDetailView is mounted for Alpha Project
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'Alpha Project One' })).toBeInTheDocument();
-      expect(screen.getByText('ALP-6')).toBeInTheDocument(); // task counter 5 + 1
+      expect(screen.getByTestId('open-create-task-modal-button')).toBeInTheDocument();
     });
 
     // 5. Switch workspace from Alpha to Beta via WorkspaceSwitcher

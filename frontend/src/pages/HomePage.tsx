@@ -1,4 +1,4 @@
-import { useState, useEffect, type FC } from 'react';
+import { useState, type FC } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient, ApiClientError } from '../shared/lib/api-client';
 import { config } from '../shared/lib/config';
@@ -53,10 +53,12 @@ export const HomePage: FC = () => {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  // Reset selected project whenever active workspace changes
-  useEffect(() => {
+  // Synchronous state adjustment during render prevents any 1-frame transient render
+  const [prevWorkspaceId, setPrevWorkspaceId] = useState(activeWorkspace?.id);
+  if (activeWorkspace?.id !== prevWorkspaceId) {
+    setPrevWorkspaceId(activeWorkspace?.id);
     setSelectedProjectId(null);
-  }, [activeWorkspace?.id]);
+  }
 
   // 1. Query Backend Liveness (/health)
   const healthQuery = useQuery<HealthData, ApiClientError>({
@@ -95,7 +97,7 @@ export const HomePage: FC = () => {
             </div>
             <div>
               <h1 className="text-lg font-bold tracking-tight">DevFlow</h1>
-              <p className="text-xs text-slate-400">Sprint 2 Phase 3 — Workspace & Project Management</p>
+              <p className="text-xs text-slate-400">Sprint 2 Phase 4 — Project & Task Management</p>
             </div>
           </div>
 
@@ -380,7 +382,7 @@ export const HomePage: FC = () => {
 
       {/* Footer */}
       <footer className="border-t border-slate-800/60 py-4 text-center text-xs text-slate-500">
-        DevFlow — Sprint 2 Phase 3 Verified Multi-Tenant Workspace & Project Management Engine
+        DevFlow — Sprint 2 Phase 4 Verified Task Management Engine
       </footer>
     </div>
   );

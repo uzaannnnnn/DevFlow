@@ -1077,6 +1077,10 @@ components:
         assignee_id: { type: string, format: uuid, nullable: true }
         due_date: { type: string, format: date-time, nullable: true }
         created_by: { type: string, format: uuid }
+        assignee:
+          $ref: '#/components/schemas/User'
+        creator:
+          $ref: '#/components/schemas/User'
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
 

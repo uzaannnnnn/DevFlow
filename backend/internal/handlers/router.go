@@ -66,6 +66,9 @@ func SetupRouter(cfg *config.Config, pool ...*pgxpool.Pool) *gin.Engine {
 	projectUsecase := usecases.NewProjectUsecase(p, queries)
 	projectHandler := NewProjectHandler(projectUsecase)
 
+	taskUsecase := usecases.NewTaskUsecase(p, queries)
+	taskHandler := NewTaskHandler(taskUsecase)
+
 	// API v1 route group
 	v1 := r.Group("/api/v1")
 	{
@@ -123,6 +126,18 @@ func SetupRouter(cfg *config.Config, pool ...*pgxpool.Pool) *gin.Engine {
 				projects.POST("/:id/members", projectHandler.AddMember)
 				projects.PATCH("/:id/members/:userId", projectHandler.UpdateMemberRole)
 				projects.DELETE("/:id/members/:userId", projectHandler.RemoveMember)
+
+				// Tasks in Project (T1 & T2)
+				projects.GET("/:id/tasks", taskHandler.List)
+				projects.POST("/:id/tasks", taskHandler.Create)
+			}
+
+			// Tasks (T3, T4, T5)
+			tasks := protected.Group("/tasks")
+			{
+				tasks.GET("/:id", taskHandler.Get)
+				tasks.PATCH("/:id", taskHandler.Update)
+				tasks.DELETE("/:id", taskHandler.Delete)
 			}
 		}
 	}
