@@ -108,27 +108,71 @@ docker compose ps
 cp .env.example .env
 ```
 
-### 3. Backend Setup
+### 3. Backend Setup & Commands
 ```bash
 cd backend
+
+# Download dependencies
 go mod download
-# Run backend server
+
+# Run unit and integration tests
+go test -v ./...
+
+# Build production binary
+go build -o bin/server ./cmd/server
+
+# Run backend server (defaults to port 8080)
 go run cmd/server/main.go
+```
+
+#### Health Check Verification
+Once running, verify HTTP server status:
+```bash
+curl -i http://localhost:8080/health
+# Response: {"success":true,"data":{"status":"healthy","service":"devflow-api","version":"0.1.0","environment":"development"},"meta":null}
 ```
 
 ### 4. Frontend Setup
 ```bash
 cd frontend
+
+# Install dependencies
 npm install
-# Run Vite dev server
+
+# Run TypeScript type check
+npm run type-check
+
+# Run production build
+npm run build
+
+# Run Vite dev server (port 5173)
 npm run dev
 ```
+
+---
+
+## Backend Environment Variables
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `APP_ENV` | `development` | Environment mode (`development`, `test`, `production`). In production, strict secret checks are enforced. |
+| `PORT` | `8080` | Port for the HTTP server. |
+| `DATABASE_URL` | `postgres://devflow:devflow@localhost:5432/devflow?sslmode=disable` | PostgreSQL connection string. Live connection is not required for HTTP server startup. |
+| `JWT_SECRET` | Dev fallback (dev/test only) | Minimum 32-character HMAC signing key. Production requires explicit setting. |
+| `JWT_ACCESS_TTL` | `15m` | Lifetime of short-lived JWT access tokens. |
+| `REFRESH_TOKEN_TTL` | `168h` | Lifetime of refresh tokens (7 days). |
+| `COOKIE_DOMAIN` | `localhost` | Domain scope for the refresh token cookie. |
+| `COOKIE_SECURE` | `false` (dev) / `true` (prod) | HTTPS-only flag for authentication cookies. |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:5173` | Comma-separated list of allowed origins. Wildcards (`*`) are disallowed in production. |
 
 ---
 
 ## Project Status
 
 - **Sprint 0 (Design & Specifications):** Complete & Approved.
-- **Sprint 1 (Foundation & Infrastructure):** In Progress (Phase 1: Project Initialization).
+- **Sprint 1 (Foundation & Infrastructure):**
+  - [x] **Phase 1 (Project Initialization & Monorepo Setup):** Complete & Verified.
+  - [x] **Phase 2 (Backend Foundation & Health Check):** Complete & Tested.
+  - [ ] **Phase 3 (Database Migrations & PostgreSQL Schemas):** Pending.
 - **Sprint 2 (Auth & Workspace Management):** Scheduled.
 
