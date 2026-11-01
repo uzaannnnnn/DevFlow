@@ -179,12 +179,62 @@ npm run dev
 ## Project Status
 
 - **Sprint 0 (Design & Specifications):** Complete & Approved.
-- **Sprint 1 (Foundation & Infrastructure):**
-  - [x] **Phase 1 (Project Initialization & Monorepo Setup):** Complete & Verified.
-  - [x] **Phase 2 (Backend Foundation & Health Check):** Complete & Tested.
-  - [x] **Phase 3 (Database Foundation & Migrations):** Complete & Verified.
-  - [x] **Phase 4 (Frontend Foundation & API Client):** Complete & Verified.
-- **Sprint 2 (Auth & Workspace Management):**
-  - [x] **Phase 1 (Authentication Engine & Frontend Auth Foundation):** Complete & Verified.
-  - [ ] **Phase 2 (Workspace Management & RBAC):** In Progress.
+- **Sprint 1 (Foundation & Infrastructure):** Complete & Verified.
+  - [x] Phase 1 (Project Initialization & Monorepo Setup)
+  - [x] Phase 2 (Backend Foundation & Health Check)
+  - [x] Phase 3 (Database Foundation & Migrations)
+  - [x] Phase 4 (Frontend Foundation & API Client)
+- **Sprint 2 (Core SaaS Foundation):** Complete & Verified.
+  - [x] Phase 1 (Authentication Engine & Frontend Auth Foundation)
+  - [x] Phase 2 (Workspace Management & RBAC)
+  - [x] Phase 3 (Project Management & Memberships)
+  - [x] Phase 4 (Task Management & Concurrency Safety)
+- **Sprint 3 (Lean MVP Scope):** Complete & Verified.
+  - [x] Backend Comments & Activity Feed APIs
+  - [x] 4-Column Drag-and-Drop Kanban Board with Optimistic Updates
+  - [x] Task Comments in Detail Modal
+  - [x] Project Activity History & Audit Trail Tab
+  - [x] Workspace Dashboard Metrics & Recent Tasks Overview
+
+---
+
+## Production Deployment Guide
+
+### 1. Database Provisioning & Migrations
+Ensure PostgreSQL 16 is accessible. Execute migrations using the CLI binary:
+```bash
+DATABASE_URL="postgres://user:password@db-host:5432/dbname?sslmode=require" ./backend/bin/migrate up
+```
+
+### 2. Backend Container Deployment
+Build and run the backend Docker image:
+```bash
+docker build -t devflow-backend:latest ./backend
+docker run -d \
+  --name devflow-backend \
+  -p 8080:8080 \
+  -e APP_ENV=production \
+  -e PORT=8080 \
+  -e DATABASE_URL="postgres://user:password@db-host:5432/dbname?sslmode=require" \
+  -e JWT_SECRET="your_production_secure_secret_key_minimum_32_bytes" \
+  -e COOKIE_DOMAIN="yourdomain.com" \
+  -e COOKIE_SECURE=true \
+  -e CORS_ALLOWED_ORIGINS="https://yourdomain.com" \
+  devflow-backend:latest
+```
+
+### 3. Frontend Deployment (Static Hosting / Vercel)
+Build the production static assets:
+```bash
+cd frontend
+VITE_API_URL="https://api.yourdomain.com/api/v1" npm run build
+# Deploy the generated `dist/` directory to Vercel, Netlify, or Nginx
+```
+
+### 4. Health Check Verification
+```bash
+curl -f https://api.yourdomain.com/health
+curl -f https://api.yourdomain.com/health/ready
+```
+
 
