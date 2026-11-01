@@ -1,0 +1,1322 @@
+openapi: 3.0.3
+info:
+  title: DevFlow API
+  version: 1.0.0
+  description: REST API for DevFlow project management platform
+servers:
+  - url: https://api.devflow.example.com/api/v1
+    description: Production
+  - url: http://localhost:8080/api/v1
+    description: Local development
+
+tags:
+  - name: auth
+  - name: user
+  - name: workspace
+  - name: invitations
+  - name: projects
+  - name: tasks
+  - name: comments
+  - name: activities
+  - name: dashboard
+
+securitySchemes:
+  bearerAuth:
+    type: http
+    scheme: bearer
+    format: jwt
+    description: Short-lived JWT access token
+  cookieAuth:
+    type: apiKey
+    in: cookie
+    name: refresh_token
+    description: HttpOnly rotating refresh token
+
+paths:
+  /auth/register:
+    post:
+      tags: [auth]
+      summary: Register a new user
+      operationId: authRegister
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '409':
+          $ref: '#/components/responses/Error409'
+
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Login and issue access token + refresh cookie
+      operationId: authLogin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/Error401'
+
+  /auth/refresh:
+    post:
+      tags: [auth]
+      summary: Rotate refresh token and issue new access token
+      operationId: authRefresh
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Token rotated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/Error401'
+
+  /auth/logout:
+    post:
+      tags: [auth]
+      summary: Logout and revoke current session
+      operationId: authLogout
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/Empty200'
+        '401':
+          $ref: '#/components/responses/Error401'
+
+  /auth/sessions:
+    get:
+      tags: [auth]
+      summary: List user's active refresh sessions
+      operationId: authListSessions
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of sessions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Envelope'
+        '401':
+          $ref: '#/components/responses/Error401'
+
+  /auth/sessions/{sessionId}:
+    delete:
+      tags: [auth]
+      summary: Revoke a specific session
+      operationId: authRevokeSession
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+      responses:
+        '200':
+          $ref: '#/components/responses/Empty200'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+  /users/me:
+    get:
+      tags: [user]
+      summary: Get current user profile
+      operationId: userGetMe
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/UserEnvelope'
+        '401':
+          $ref: '#/components/responses/Error401'
+
+    patch:
+      tags: [user]
+      summary: Update current user profile
+      operationId: userUpdateMe
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/UserEnvelope'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+
+  /workspaces:
+    get:
+      tags: [workspace]
+      summary: List accessible workspaces
+      operationId: workspaceList
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          $ref: '#/components/responses/WorkspaceListEnvelope'
+        '401':
+          $ref: '#/components/responses/Error401'
+
+    post:
+      tags: [workspace]
+      summary: Create a workspace
+      operationId: workspaceCreate
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWorkspaceRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/WorkspaceEnvelope'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+
+  /workspaces/{id}:
+    get:
+      tags: [workspace]
+      summary: Get workspace details
+      operationId: workspaceGet
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      responses:
+        '200':
+          $ref: '#/components/responses/WorkspaceEnvelope'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+    patch:
+      tags: [workspace]
+      summary: Update workspace
+      operationId: workspaceUpdate
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateWorkspaceRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/WorkspaceEnvelope'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+  /workspaces/{id}/members:
+    get:
+      tags: [workspace]
+      summary: List workspace members
+      operationId: workspaceListMembers
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      responses:
+        '200':
+          $ref: '#/components/responses/WorkspaceMemberListEnvelope'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+    patch:
+      tags: [workspace]
+      summary: Update a workspace member's role
+      operationId: workspaceUpdateMember
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateWorkspaceMemberRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/WorkspaceMemberEnvelope'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+    delete:
+      tags: [workspace]
+      summary: Remove a workspace member
+      operationId: workspaceRemoveMember
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          $ref: '#/components/responses/Empty200'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+  /workspaces/{id}/invitations:
+    post:
+      tags: [invitations]
+      summary: Create a workspace invitation
+      operationId: invitationCreate
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInvitationRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/InvitationEnvelope'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+    delete:
+      tags: [invitations]
+      summary: Revoke a pending invitation
+      operationId: invitationRevoke
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/InvitationId'
+      responses:
+        '200':
+          $ref: '#/components/responses/Empty200'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+  /invitations/{token}:
+    get:
+      tags: [invitations]
+      summary: Validate an invitation token
+      operationId: invitationGet
+      parameters:
+        - $ref: '#/components/parameters/InvitationToken'
+      responses:
+        '200':
+          $ref: '#/components/responses/InvitationEnvelope'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+  /invitations/{token}/accept:
+    post:
+      tags: [invitations]
+      summary: Accept an invitation
+      operationId: invitationAccept
+      parameters:
+        - $ref: '#/components/parameters/InvitationToken'
+      responses:
+        '200':
+          $ref: '#/components/responses/Empty200'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+  /invitations/{token}/decline:
+    post:
+      tags: [invitations]
+      summary: Decline an invitation
+      operationId: invitationDecline
+      parameters:
+        - $ref: '#/components/parameters/InvitationToken'
+      responses:
+        '200':
+          $ref: '#/components/responses/Empty200'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+  /workspaces/{id}/projects:
+    get:
+      tags: [projects]
+      summary: List projects in a workspace
+      operationId: projectList
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/Search'
+      responses:
+        '200':
+          $ref: '#/components/responses/ProjectListEnvelope'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+    post:
+      tags: [projects]
+      summary: Create a project
+      operationId: projectCreate
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjectRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/ProjectEnvelope'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+  /projects/{id}:
+    get:
+      tags: [projects]
+      summary: Get project details
+      operationId: projectGet
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          $ref: '#/components/responses/ProjectEnvelope'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+    patch:
+      tags: [projects]
+      summary: Update a project
+      operationId: projectUpdate
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProjectRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/ProjectEnvelope'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+    delete:
+      tags: [projects]
+      summary: Archive a project
+      operationId: projectArchive
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          $ref: '#/components/responses/Empty200'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+  /projects/{id}/members:
+    get:
+      tags: [projects]
+      summary: List project members
+      operationId: projectListMembers
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          $ref: '#/components/responses/ProjectMemberListEnvelope'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+    post:
+      tags: [projects]
+      summary: Add a project member
+      operationId: projectAddMember
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddProjectMemberRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/ProjectMemberEnvelope'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+    delete:
+      tags: [projects]
+      summary: Remove a project member
+      operationId: projectRemoveMember
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          $ref: '#/components/responses/Empty200'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+  /projects/{id}/tasks:
+    get:
+      tags: [tasks]
+      summary: List tasks in a project
+      operationId: taskList
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/Search'
+        - $ref: '#/components/parameters/Sort'
+        - $ref: '#/components/parameters/Filter'
+      responses:
+        '200':
+          $ref: '#/components/responses/TaskListEnvelope'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+    post:
+      tags: [tasks]
+      summary: Create a task
+      operationId: taskCreate
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/TaskEnvelope'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '422':
+          $ref: '#/components/responses/Error422'
+
+  /tasks/{id}:
+    get:
+      tags: [tasks]
+      summary: Get task details
+      operationId: taskGet
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '200':
+          $ref: '#/components/responses/TaskEnvelope'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+    patch:
+      tags: [tasks]
+      summary: Update a task
+      operationId: taskUpdate
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/TaskEnvelope'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '422':
+          $ref: '#/components/responses/Error422'
+
+    delete:
+      tags: [tasks]
+      summary: Soft-delete a task
+      operationId: taskDelete
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '200':
+          $ref: '#/components/responses/Empty200'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+  /tasks/{id}/comments:
+    get:
+      tags: [comments]
+      summary: List comments on a task
+      operationId: commentList
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          $ref: '#/components/responses/CommentListEnvelope'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+    post:
+      tags: [comments]
+      summary: Create a comment
+      operationId: commentCreate
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCommentRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/CommentEnvelope'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+  /comments/{id}:
+    patch:
+      tags: [comments]
+      summary: Edit own comment
+      operationId: commentUpdate
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CommentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCommentRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/CommentEnvelope'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+    delete:
+      tags: [comments]
+      summary: Delete own comment
+      operationId: commentDelete
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CommentId'
+      responses:
+        '200':
+          $ref: '#/components/responses/Empty200'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+  /projects/{id}/activities:
+    get:
+      tags: [activities]
+      summary: List project activities
+      operationId: activityList
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          $ref: '#/components/responses/ActivityListEnvelope'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+  /workspaces/{id}/dashboard:
+    get:
+      tags: [dashboard]
+      summary: Workspace dashboard
+      operationId: dashboardWorkspace
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceId'
+      responses:
+        '200':
+          $ref: '#/components/responses/WorkspaceDashboardEnvelope'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+  /projects/{id}/dashboard:
+    get:
+      tags: [dashboard]
+      summary: Project dashboard
+      operationId: dashboardProject
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          $ref: '#/components/responses/ProjectDashboardEnvelope'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+
+components:
+  schemas:
+    Envelope:
+      type: object
+      properties:
+        success: { type: boolean, example: true }
+        data: {}
+        meta: {}
+      required: [success]
+
+    ErrorEnvelope:
+      type: object
+      properties:
+        success: { type: boolean, example: false }
+        error:
+          $ref: '#/components/schemas/Error'
+      required: [success, error]
+
+    Error:
+      type: object
+      properties:
+        code: { type: string, example: VALIDATION_ERROR }
+        message: { type: string, example: Request validation failed }
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+      required: [code, message]
+
+    ErrorDetail:
+      type: object
+      properties:
+        field: { type: string }
+        message: { type: string }
+
+    RegisterRequest:
+      type: object
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8 }
+        name: { type: string }
+      required: [email, password]
+
+    LoginRequest:
+      type: object
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+      required: [email, password]
+
+    LoginResponse:
+      type: object
+      properties:
+        access_token: { type: string }
+        user: { $ref: '#/components/schemas/User' }
+
+    User:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string }
+        name: { type: string }
+        avatar_url: { type: string }
+        created_at: { type: string, format: date-time }
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        name: { type: string }
+        avatar_url: { type: string }
+
+    Workspace:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        slug: { type: string }
+        owner_id: { type: string, format: uuid }
+        created_at: { type: string, format: date-time }
+
+    CreateWorkspaceRequest:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 255 }
+      required: [name]
+
+    UpdateWorkspaceRequest:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 255 }
+
+    WorkspaceMember:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        workspace_id: { type: string, format: uuid }
+        user: { $ref: '#/components/schemas/User' }
+        role: { type: string, enum: [owner, admin, member] }
+        created_at: { type: string, format: date-time }
+
+    UpdateWorkspaceMemberRequest:
+      type: object
+      properties:
+        role: { type: string, enum: [owner, admin, member] }
+      required: [role]
+
+    Invitation:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        workspace_id: { type: string, format: uuid }
+        email: { type: string }
+        expires_at: { type: string, format: date-time }
+
+    CreateInvitationRequest:
+      type: object
+      properties:
+        email: { type: string, format: email }
+      required: [email]
+
+    Project:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        workspace_id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        task_counter: { type: integer }
+        created_by: { type: string, format: uuid }
+        created_at: { type: string, format: date-time }
+
+    CreateProjectRequest:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 255 }
+        description: { type: string }
+      required: [name]
+
+    UpdateProjectRequest:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
+
+    ProjectMember:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        project_id: { type: string, format: uuid }
+        user: { $ref: '#/components/schemas/User' }
+        role: { type: string, enum: [owner, admin, member] }
+
+    AddProjectMemberRequest:
+      type: object
+      properties:
+        user_id: { type: string, format: uuid }
+        role: { type: string, enum: [admin, member], default: member }
+      required: [user_id]
+
+    Task:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        project_id: { type: string, format: uuid }
+        identifier: { type: string }
+        title: { type: string }
+        description: { type: string }
+        status: { type: string, enum: [todo, in_progress, review, done] }
+        priority: { type: string, enum: [low, medium, high, urgent] }
+        assignee_id: { type: string, format: uuid, nullable: true }
+        due_date: { type: string, format: date-time, nullable: true }
+        created_by: { type: string, format: uuid }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    CreateTaskRequest:
+      type: object
+      properties:
+        title: { type: string, minLength: 1, maxLength: 255 }
+        description: { type: string }
+        status: { type: string, enum: [todo, in_progress, review, done], default: todo }
+        priority: { type: string, enum: [low, medium, high, urgent], default: medium }
+        assignee_id: { type: string, format: uuid, nullable: true }
+        due_date: { type: string, format: date-time, nullable: true }
+      required: [title]
+
+    UpdateTaskRequest:
+      type: object
+      properties:
+        title: { type: string }
+        description: { type: string }
+        status: { type: string, enum: [todo, in_progress, review, done] }
+        priority: { type: string, enum: [low, medium, high, urgent] }
+        assignee_id: { type: string, format: uuid, nullable: true }
+        due_date: { type: string, format: date-time, nullable: true }
+
+    Comment:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        task_id: { type: string, format: uuid }
+        author: { $ref: '#/components/schemas/User' }
+        body: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    CreateCommentRequest:
+      type: object
+      properties:
+        body: { type: string, minLength: 1 }
+      required: [body]
+
+    UpdateCommentRequest:
+      type: object
+      properties:
+        body: { type: string, minLength: 1 }
+      required: [body]
+
+    Activity:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        project_id: { type: string, format: uuid }
+        task_id: { type: string, format: uuid, nullable: true }
+        actor: { $ref: '#/components/schemas/User' }
+        action: { type: string }
+        metadata: { type: object }
+        created_at: { type: string, format: date-time }
+
+    WorkspaceDashboard:
+      type: object
+      properties:
+        total_projects: { type: integer }
+        total_tasks: { type: integer }
+        tasks_by_status: { type: object }
+        my_assigned_tasks: { type: integer }
+        overdue_tasks: { type: integer }
+        recent_activities:
+          type: array
+          items: { $ref: '#/components/schemas/Activity' }
+
+    ProjectDashboard:
+      type: object
+      properties:
+        total_tasks: { type: integer }
+        tasks_by_status: { type: object }
+        progress_percent: { type: number }
+        overdue_tasks: { type: integer }
+        recent_activities:
+          type: array
+          items: { $ref: '#/components/schemas/Activity' }
+
+  parameters:
+    Page:
+      in: query
+      name: page
+      schema: { type: integer, default: 1, minimum: 1 }
+    PageSize:
+      in: query
+      name: page_size
+      schema: { type: integer, default: 20, minimum: 1, maximum: 100 }
+    Search:
+      in: query
+      name: q
+      schema: { type: string }
+    Sort:
+      in: query
+      name: sort
+      schema: { type: string }
+    Filter:
+      in: query
+      name: filter
+      schema: { type: string }
+    WorkspaceId:
+      in: path
+      name: id
+      required: true
+      schema: { type: string, format: uuid }
+    ProjectId:
+      in: path
+      name: id
+      required: true
+      schema: { type: string, format: uuid }
+    TaskId:
+      in: path
+      name: id
+      required: true
+      schema: { type: string, format: uuid }
+    CommentId:
+      in: path
+      name: id
+      required: true
+      schema: { type: string, format: uuid }
+    SessionId:
+      in: path
+      name: id
+      required: true
+      schema: { type: string, format: uuid }
+    UserId:
+      in: path
+      name: userId
+      required: true
+      schema: { type: string, format: uuid }
+    InvitationId:
+      in: path
+      name: invitationId
+      required: true
+      schema: { type: string, format: uuid }
+    InvitationToken:
+      in: path
+      name: token
+      required: true
+      schema: { type: string }
+
+  responses:
+    Empty200:
+      description: Empty success
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Envelope'
+    UserEnvelope:
+      description: User envelope
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Envelope'
+    WorkspaceEnvelope:
+      description: Workspace envelope
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Envelope'
+    WorkspaceListEnvelope:
+      description: Workspace list envelope
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Envelope'
+    WorkspaceMemberEnvelope:
+      description: Workspace member envelope
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Envelope'
+    WorkspaceMemberListEnvelope:
+      description: Workspace member list envelope
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Envelope'
+    InvitationEnvelope:
+      description: Invitation envelope
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Envelope'
+    ProjectEnvelope:
+      description: Project envelope
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Envelope'
+    ProjectListEnvelope:
+      description: Project list envelope
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Envelope'
+    ProjectMemberEnvelope:
+      description: Project member envelope
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Envelope'
+    ProjectMemberListEnvelope:
+      description: Project member list envelope
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Envelope'
+    TaskEnvelope:
+      description: Task envelope
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Envelope'
+    TaskListEnvelope:
+      description: Task list envelope
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Envelope'
+    CommentEnvelope:
+      description: Comment envelope
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Envelope'
+    CommentListEnvelope:
+      description: Comment list envelope
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Envelope'
+    ActivityListEnvelope:
+      description: Activity list envelope
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Envelope'
+    WorkspaceDashboardEnvelope:
+      description: Workspace dashboard envelope
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Envelope'
+    ProjectDashboardEnvelope:
+      description: Project dashboard envelope
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Envelope'
+    Error400:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Error401:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Error403:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Error404:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Error409:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Error422:
+      description: Business rule violation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
