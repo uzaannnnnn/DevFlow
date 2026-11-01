@@ -647,15 +647,6 @@ func (u *projectUsecase) RemoveProjectMember(ctx context.Context, actorID uuid.U
 
 	qtx := u.queries.WithTx(tx)
 
-	// Step 0: Lock project row to serialize departures and prevent sole-owner TOCTOU race
-	_, err = qtx.GetProjectByIDForUpdate(ctx, pgPID)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return domain.NewNotFoundError("Project not found")
-		}
-		return domain.NewInternalError("Failed to lock project", err)
-	}
-
 	// Step 1: Verify actor membership
 	actorMember, err := qtx.GetProjectMember(ctx, repository.GetProjectMemberParams{
 		ProjectID: pgPID,
@@ -668,7 +659,7 @@ func (u *projectUsecase) RemoveProjectMember(ctx context.Context, actorID uuid.U
 		return domain.NewInternalError("Failed to check project membership", err)
 	}
 
-	// Step 2: Lock departing project member row with FOR UPDATE
+	// Step 2: Lock departing project member row with FOR UPDATE per §8.14
 	targetMember, err := qtx.GetProjectMemberForUpdate(ctx, repository.GetProjectMemberForUpdateParams{
 		ProjectID: pgPID,
 		UserID:    pgTargetID,
