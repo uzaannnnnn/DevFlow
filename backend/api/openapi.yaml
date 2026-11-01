@@ -514,6 +514,7 @@ paths:
     delete:
       tags: [projects]
       summary: Archive a project
+      description: Soft-delete a project. Permitted for Project Owner and Project Admin per AC-C5.
       operationId: projectArchive
       security:
         - bearerAuth: []
@@ -573,6 +574,36 @@ paths:
           $ref: '#/components/responses/Error403'
         '404':
           $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+
+  /projects/{id}/members/{userId}:
+    patch:
+      tags: [projects]
+      summary: Update project member role
+      operationId: projectUpdateMemberRole
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProjectMemberRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/ProjectMemberEnvelope'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
 
     delete:
       tags: [projects]
@@ -586,6 +617,8 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/Empty200'
+        '400':
+          $ref: '#/components/responses/Error400'
         '401':
           $ref: '#/components/responses/Error401'
         '403':
@@ -987,22 +1020,25 @@ components:
         id: { type: string, format: uuid }
         workspace_id: { type: string, format: uuid }
         name: { type: string }
+        key: { type: string, example: "DEV" }
         description: { type: string }
         task_counter: { type: integer }
         created_by: { type: string, format: uuid }
         created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
 
     CreateProjectRequest:
       type: object
       properties:
         name: { type: string, minLength: 1, maxLength: 255 }
+        key: { type: string, pattern: '^[A-Z][A-Z0-9]{1,9}$', description: 'Uppercase alphanumeric 2-10 characters starting with a letter. Optional; auto-generated if omitted.' }
         description: { type: string }
       required: [name]
 
     UpdateProjectRequest:
       type: object
       properties:
-        name: { type: string }
+        name: { type: string, minLength: 1, maxLength: 255 }
         description: { type: string }
 
     ProjectMember:
@@ -1010,8 +1046,10 @@ components:
       properties:
         id: { type: string, format: uuid }
         project_id: { type: string, format: uuid }
+        user_id: { type: string, format: uuid }
         user: { $ref: '#/components/schemas/User' }
         role: { type: string, enum: [owner, admin, member] }
+        joined_at: { type: string, format: date-time }
 
     AddProjectMemberRequest:
       type: object
@@ -1019,6 +1057,12 @@ components:
         user_id: { type: string, format: uuid }
         role: { type: string, enum: [admin, member], default: member }
       required: [user_id]
+
+    UpdateProjectMemberRequest:
+      type: object
+      properties:
+        role: { type: string, enum: [admin, member] }
+      required: [role]
 
     Task:
       type: object

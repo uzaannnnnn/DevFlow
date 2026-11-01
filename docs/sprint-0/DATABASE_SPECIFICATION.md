@@ -275,7 +275,11 @@ No additional tables are required for the MVP. Note: The MVP active schema consi
 
 **Integrity notes:**
 - Project belongs to exactly one workspace (FK `workspace_id`).
-- `key` is immutable after creation (no application UPDATE on `key`).
+- **Project Key Convention & Invariants (Decision 6):**
+  - **Format & Validation:** Validated against regex `^[A-Z][A-Z0-9]{1,9}$` (2 to 10 characters, starting with an uppercase letter, followed by uppercase alphanumeric characters).
+  - **Auto-Generation:** If not explicitly provided, derived automatically from the project name by extracting word initials or first alphanumeric characters (prepends 'P' if starting with a digit, clamped between 2 and 10 characters).
+  - **Uniqueness & Scope:** Enforced per-workspace via `UNIQUE(workspace_id, key)`. Different workspaces may reuse the same key. Key collisions within the same workspace result in HTTP 409 Conflict.
+  - **Permanent Immutability:** Set upon project creation and strictly immutable thereafter (no `UPDATE` permitted). Ensures task identifiers (e.g. `CORE-001`) remain permanent across Git branches, commits, PR references, and audit trails.
 - `task_counter` starts at 0; first task gets counter value 1. Supports values up to 2,147,483,647 (the maximum positive value of PostgreSQL int), providing sufficient headroom for project lifetimes.
 - Project archival = soft delete (`deleted_at`). Archived projects' tasks remain; activity logs preserved.
 

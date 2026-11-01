@@ -11,6 +11,48 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const addProjectMember = `-- name: AddProjectMember :one
+
+INSERT INTO project_members (
+    project_id,
+    workspace_id,
+    user_id,
+    role
+) VALUES (
+    $1, $2, $3, $4
+)
+RETURNING id, project_id, workspace_id, user_id, role, created_at
+`
+
+type AddProjectMemberParams struct {
+	ProjectID   pgtype.UUID `json:"project_id"`
+	WorkspaceID pgtype.UUID `json:"workspace_id"`
+	UserID      pgtype.UUID `json:"user_id"`
+	Role        string      `json:"role"`
+}
+
+// ============================================================================
+// Project Members Queries
+// ============================================================================
+func (q *Queries) AddProjectMember(ctx context.Context, arg AddProjectMemberParams) (ProjectMember, error) {
+	row := q.db.QueryRow(ctx, addProjectMember,
+		arg.ProjectID,
+		arg.WorkspaceID,
+		arg.UserID,
+		arg.Role,
+	)
+	var i ProjectMember
+	err := row.Scan(
+		&i.ID,
+		&i.ProjectID,
+		&i.WorkspaceID,
+		&i.UserID,
+		&i.Role,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const addWorkspaceMember = `-- name: AddWorkspaceMember :one
 
 INSERT INTO workspace_members (
@@ -46,6 +88,18 @@ func (q *Queries) AddWorkspaceMember(ctx context.Context, arg AddWorkspaceMember
 	return i, err
 }
 
+const countProjectOwners = `-- name: CountProjectOwners :one
+SELECT count(*) FROM project_members
+WHERE project_id = $1 AND role = 'owner'
+`
+
+func (q *Queries) CountProjectOwners(ctx context.Context, projectID pgtype.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, countProjectOwners, projectID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countWorkspaceOwners = `-- name: CountWorkspaceOwners :one
 SELECT count(*)::bigint FROM workspace_members
 WHERE workspace_id = $1 AND role = 'owner'
@@ -56,6 +110,56 @@ func (q *Queries) CountWorkspaceOwners(ctx context.Context, workspaceID pgtype.U
 	var column_1 int64
 	err := row.Scan(&column_1)
 	return column_1, err
+}
+
+const createProject = `-- name: CreateProject :one
+
+INSERT INTO projects (
+    workspace_id,
+    key,
+    name,
+    description,
+    task_counter,
+    created_by
+) VALUES (
+    $1, $2, $3, $4, 0, $5
+)
+RETURNING id, workspace_id, key, name, description, task_counter, created_by, created_at, updated_at, deleted_at
+`
+
+type CreateProjectParams struct {
+	WorkspaceID pgtype.UUID `json:"workspace_id"`
+	Key         string      `json:"key"`
+	Name        string      `json:"name"`
+	Description pgtype.Text `json:"description"`
+	CreatedBy   pgtype.UUID `json:"created_by"`
+}
+
+// ============================================================================
+// Project Queries
+// ============================================================================
+func (q *Queries) CreateProject(ctx context.Context, arg CreateProjectParams) (Project, error) {
+	row := q.db.QueryRow(ctx, createProject,
+		arg.WorkspaceID,
+		arg.Key,
+		arg.Name,
+		arg.Description,
+		arg.CreatedBy,
+	)
+	var i Project
+	err := row.Scan(
+		&i.ID,
+		&i.WorkspaceID,
+		&i.Key,
+		&i.Name,
+		&i.Description,
+		&i.TaskCounter,
+		&i.CreatedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
 }
 
 const createRefreshSession = `-- name: CreateRefreshSession :one
@@ -177,6 +281,31 @@ func (q *Queries) CreateWorkspace(ctx context.Context, arg CreateWorkspaceParams
 	return i, err
 }
 
+const deleteProjectMember = `-- name: DeleteProjectMember :one
+DELETE FROM project_members
+WHERE project_id = $1 AND user_id = $2
+RETURNING id, project_id, workspace_id, user_id, role, created_at
+`
+
+type DeleteProjectMemberParams struct {
+	ProjectID pgtype.UUID `json:"project_id"`
+	UserID    pgtype.UUID `json:"user_id"`
+}
+
+func (q *Queries) DeleteProjectMember(ctx context.Context, arg DeleteProjectMemberParams) (ProjectMember, error) {
+	row := q.db.QueryRow(ctx, deleteProjectMember, arg.ProjectID, arg.UserID)
+	var i ProjectMember
+	err := row.Scan(
+		&i.ID,
+		&i.ProjectID,
+		&i.WorkspaceID,
+		&i.UserID,
+		&i.Role,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const deleteWorkspaceMember = `-- name: DeleteWorkspaceMember :one
 DELETE FROM workspace_members
 WHERE workspace_id = $1 AND user_id = $2
@@ -202,14 +331,10 @@ func (q *Queries) DeleteWorkspaceMember(ctx context.Context, arg DeleteWorkspace
 }
 
 const getProjectByID = `-- name: GetProjectByID :one
-
 SELECT id, workspace_id, key, name, description, task_counter, created_by, created_at, updated_at, deleted_at FROM projects
 WHERE id = $1 AND deleted_at IS NULL LIMIT 1
 `
 
-// ============================================================================
-// Project and Task Basic Stubs
-// ============================================================================
 func (q *Queries) GetProjectByID(ctx context.Context, id pgtype.UUID) (Project, error) {
 	row := q.db.QueryRow(ctx, getProjectByID, id)
 	var i Project
@@ -224,6 +349,107 @@ func (q *Queries) GetProjectByID(ctx context.Context, id pgtype.UUID) (Project, 
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+	)
+	return i, err
+}
+
+const getProjectByIDForUpdate = `-- name: GetProjectByIDForUpdate :one
+SELECT id, workspace_id, key, name, description, task_counter, created_by, created_at, updated_at, deleted_at FROM projects
+WHERE id = $1 AND deleted_at IS NULL
+FOR UPDATE LIMIT 1
+`
+
+func (q *Queries) GetProjectByIDForUpdate(ctx context.Context, id pgtype.UUID) (Project, error) {
+	row := q.db.QueryRow(ctx, getProjectByIDForUpdate, id)
+	var i Project
+	err := row.Scan(
+		&i.ID,
+		&i.WorkspaceID,
+		&i.Key,
+		&i.Name,
+		&i.Description,
+		&i.TaskCounter,
+		&i.CreatedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
+const getProjectByWorkspaceAndKey = `-- name: GetProjectByWorkspaceAndKey :one
+SELECT id, workspace_id, key, name, description, task_counter, created_by, created_at, updated_at, deleted_at FROM projects
+WHERE workspace_id = $1 AND lower(key) = lower($2) AND deleted_at IS NULL LIMIT 1
+`
+
+type GetProjectByWorkspaceAndKeyParams struct {
+	WorkspaceID pgtype.UUID `json:"workspace_id"`
+	Lower       string      `json:"lower"`
+}
+
+func (q *Queries) GetProjectByWorkspaceAndKey(ctx context.Context, arg GetProjectByWorkspaceAndKeyParams) (Project, error) {
+	row := q.db.QueryRow(ctx, getProjectByWorkspaceAndKey, arg.WorkspaceID, arg.Lower)
+	var i Project
+	err := row.Scan(
+		&i.ID,
+		&i.WorkspaceID,
+		&i.Key,
+		&i.Name,
+		&i.Description,
+		&i.TaskCounter,
+		&i.CreatedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
+const getProjectMember = `-- name: GetProjectMember :one
+SELECT id, project_id, workspace_id, user_id, role, created_at FROM project_members
+WHERE project_id = $1 AND user_id = $2 LIMIT 1
+`
+
+type GetProjectMemberParams struct {
+	ProjectID pgtype.UUID `json:"project_id"`
+	UserID    pgtype.UUID `json:"user_id"`
+}
+
+func (q *Queries) GetProjectMember(ctx context.Context, arg GetProjectMemberParams) (ProjectMember, error) {
+	row := q.db.QueryRow(ctx, getProjectMember, arg.ProjectID, arg.UserID)
+	var i ProjectMember
+	err := row.Scan(
+		&i.ID,
+		&i.ProjectID,
+		&i.WorkspaceID,
+		&i.UserID,
+		&i.Role,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getProjectMemberForUpdate = `-- name: GetProjectMemberForUpdate :one
+SELECT id, project_id, workspace_id, user_id, role, created_at FROM project_members
+WHERE project_id = $1 AND user_id = $2
+FOR UPDATE LIMIT 1
+`
+
+type GetProjectMemberForUpdateParams struct {
+	ProjectID pgtype.UUID `json:"project_id"`
+	UserID    pgtype.UUID `json:"user_id"`
+}
+
+func (q *Queries) GetProjectMemberForUpdate(ctx context.Context, arg GetProjectMemberForUpdateParams) (ProjectMember, error) {
+	row := q.db.QueryRow(ctx, getProjectMemberForUpdate, arg.ProjectID, arg.UserID)
+	var i ProjectMember
+	err := row.Scan(
+		&i.ID,
+		&i.ProjectID,
+		&i.WorkspaceID,
+		&i.UserID,
+		&i.Role,
+		&i.CreatedAt,
 	)
 	return i, err
 }
@@ -268,10 +494,14 @@ func (q *Queries) GetRefreshSessionByTokenHashForUpdate(ctx context.Context, tok
 }
 
 const getTaskByID = `-- name: GetTaskByID :one
+
 SELECT id, project_id, identifier, title, description, status, priority, assignee_id, due_date, created_by, created_at, updated_at, deleted_at FROM tasks
 WHERE id = $1 AND deleted_at IS NULL LIMIT 1
 `
 
+// ============================================================================
+// Task Basic Stubs
+// ============================================================================
 func (q *Queries) GetTaskByID(ctx context.Context, id pgtype.UUID) (Task, error) {
 	row := q.db.QueryRow(ctx, getTaskByID, id)
 	var i Task
@@ -517,6 +747,146 @@ func (q *Queries) ListActiveUserRefreshSessions(ctx context.Context, userID pgty
 	return items, nil
 }
 
+const listProjectMembers = `-- name: ListProjectMembers :many
+SELECT
+    pm.id,
+    pm.project_id,
+    pm.workspace_id,
+    pm.user_id,
+    pm.role,
+    pm.created_at,
+    u.email,
+    u.name as user_name,
+    u.avatar_url
+FROM project_members pm
+JOIN users u ON pm.user_id = u.id
+WHERE pm.project_id = $1
+ORDER BY pm.created_at ASC
+`
+
+type ListProjectMembersRow struct {
+	ID          pgtype.UUID        `json:"id"`
+	ProjectID   pgtype.UUID        `json:"project_id"`
+	WorkspaceID pgtype.UUID        `json:"workspace_id"`
+	UserID      pgtype.UUID        `json:"user_id"`
+	Role        string             `json:"role"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	Email       string             `json:"email"`
+	UserName    pgtype.Text        `json:"user_name"`
+	AvatarUrl   pgtype.Text        `json:"avatar_url"`
+}
+
+func (q *Queries) ListProjectMembers(ctx context.Context, projectID pgtype.UUID) ([]ListProjectMembersRow, error) {
+	rows, err := q.db.Query(ctx, listProjectMembers, projectID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListProjectMembersRow
+	for rows.Next() {
+		var i ListProjectMembersRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.ProjectID,
+			&i.WorkspaceID,
+			&i.UserID,
+			&i.Role,
+			&i.CreatedAt,
+			&i.Email,
+			&i.UserName,
+			&i.AvatarUrl,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listProjectsByWorkspaceAndUser = `-- name: ListProjectsByWorkspaceAndUser :many
+SELECT
+    p.id,
+    p.workspace_id,
+    p.key,
+    p.name,
+    p.description,
+    p.task_counter,
+    p.created_by,
+    p.created_at,
+    p.updated_at,
+    p.deleted_at,
+    pm.role as member_role,
+    (SELECT count(*) FROM project_members pm2 WHERE pm2.project_id = p.id) as member_count
+FROM projects p
+JOIN project_members pm ON p.id = pm.project_id
+WHERE p.workspace_id = $1
+  AND pm.user_id = $2
+  AND p.deleted_at IS NULL
+  AND (
+      $3::text IS NULL OR
+      p.name ILIKE '%' || $3::text || '%' OR
+      p.key ILIKE '%' || $3::text || '%'
+  )
+ORDER BY p.created_at DESC
+`
+
+type ListProjectsByWorkspaceAndUserParams struct {
+	WorkspaceID pgtype.UUID `json:"workspace_id"`
+	UserID      pgtype.UUID `json:"user_id"`
+	Search      pgtype.Text `json:"search"`
+}
+
+type ListProjectsByWorkspaceAndUserRow struct {
+	ID          pgtype.UUID        `json:"id"`
+	WorkspaceID pgtype.UUID        `json:"workspace_id"`
+	Key         string             `json:"key"`
+	Name        string             `json:"name"`
+	Description pgtype.Text        `json:"description"`
+	TaskCounter int32              `json:"task_counter"`
+	CreatedBy   pgtype.UUID        `json:"created_by"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt   pgtype.Timestamptz `json:"deleted_at"`
+	MemberRole  string             `json:"member_role"`
+	MemberCount int64              `json:"member_count"`
+}
+
+func (q *Queries) ListProjectsByWorkspaceAndUser(ctx context.Context, arg ListProjectsByWorkspaceAndUserParams) ([]ListProjectsByWorkspaceAndUserRow, error) {
+	rows, err := q.db.Query(ctx, listProjectsByWorkspaceAndUser, arg.WorkspaceID, arg.UserID, arg.Search)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListProjectsByWorkspaceAndUserRow
+	for rows.Next() {
+		var i ListProjectsByWorkspaceAndUserRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.WorkspaceID,
+			&i.Key,
+			&i.Name,
+			&i.Description,
+			&i.TaskCounter,
+			&i.CreatedBy,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+			&i.MemberRole,
+			&i.MemberCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listWorkspaceMembers = `-- name: ListWorkspaceMembers :many
 SELECT 
     wm.id,
@@ -632,6 +1002,38 @@ func (q *Queries) ListWorkspacesByUserID(ctx context.Context, userID pgtype.UUID
 	return items, nil
 }
 
+const lockTasksForDepartingProjectMember = `-- name: LockTasksForDepartingProjectMember :many
+SELECT id FROM tasks
+WHERE project_id = $1 AND assignee_id = $2
+ORDER BY id
+FOR UPDATE
+`
+
+type LockTasksForDepartingProjectMemberParams struct {
+	ProjectID  pgtype.UUID `json:"project_id"`
+	AssigneeID pgtype.UUID `json:"assignee_id"`
+}
+
+func (q *Queries) LockTasksForDepartingProjectMember(ctx context.Context, arg LockTasksForDepartingProjectMemberParams) ([]pgtype.UUID, error) {
+	rows, err := q.db.Query(ctx, lockTasksForDepartingProjectMember, arg.ProjectID, arg.AssigneeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []pgtype.UUID
+	for rows.Next() {
+		var id pgtype.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const ping = `-- name: Ping :one
 
 SELECT 1 AS ready
@@ -704,6 +1106,31 @@ func (q *Queries) RevokeRefreshSessionByTokenHash(ctx context.Context, tokenHash
 	return i, err
 }
 
+const softDeleteProject = `-- name: SoftDeleteProject :one
+UPDATE projects
+SET deleted_at = now(), updated_at = now()
+WHERE id = $1 AND deleted_at IS NULL
+RETURNING id, workspace_id, key, name, description, task_counter, created_by, created_at, updated_at, deleted_at
+`
+
+func (q *Queries) SoftDeleteProject(ctx context.Context, id pgtype.UUID) (Project, error) {
+	row := q.db.QueryRow(ctx, softDeleteProject, id)
+	var i Project
+	err := row.Scan(
+		&i.ID,
+		&i.WorkspaceID,
+		&i.Key,
+		&i.Name,
+		&i.Description,
+		&i.TaskCounter,
+		&i.CreatedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
 const softDeleteWorkspace = `-- name: SoftDeleteWorkspace :one
 UPDATE workspaces
 SET deleted_at = now(), updated_at = now()
@@ -725,6 +1152,46 @@ func (q *Queries) SoftDeleteWorkspace(ctx context.Context, id pgtype.UUID) (Work
 		&i.Description,
 	)
 	return i, err
+}
+
+const unassignTasksAndLogForDepartingMember = `-- name: UnassignTasksAndLogForDepartingMember :many
+WITH unassigned_tasks AS (
+    UPDATE tasks
+    SET assignee_id = NULL, updated_at = now()
+    WHERE tasks.project_id = $3 AND tasks.assignee_id = $2::uuid
+    RETURNING id, tasks.project_id
+)
+INSERT INTO activity_logs (id, project_id, task_id, actor_id, action, metadata, created_at)
+SELECT gen_random_uuid(), u.project_id, u.id, $1, 'task_unassigned',
+       jsonb_build_object('unassigned_user_id', $2::text), now()
+FROM unassigned_tasks u
+RETURNING task_id
+`
+
+type UnassignTasksAndLogForDepartingMemberParams struct {
+	ActorID    pgtype.UUID `json:"actor_id"`
+	AssigneeID string      `json:"assignee_id"`
+	ProjectID  pgtype.UUID `json:"project_id"`
+}
+
+func (q *Queries) UnassignTasksAndLogForDepartingMember(ctx context.Context, arg UnassignTasksAndLogForDepartingMemberParams) ([]pgtype.UUID, error) {
+	rows, err := q.db.Query(ctx, unassignTasksAndLogForDepartingMember, arg.ActorID, arg.AssigneeID, arg.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []pgtype.UUID
+	for rows.Next() {
+		var task_id pgtype.UUID
+		if err := rows.Scan(&task_id); err != nil {
+			return nil, err
+		}
+		items = append(items, task_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const unassignTasksForDepartingMember = `-- name: UnassignTasksForDepartingMember :many
@@ -765,6 +1232,99 @@ func (q *Queries) UnassignTasksForDepartingMember(ctx context.Context, arg Unass
 		return nil, err
 	}
 	return items, nil
+}
+
+const unassignTasksForDepartingProjectMember = `-- name: UnassignTasksForDepartingProjectMember :many
+UPDATE tasks
+SET assignee_id = NULL, updated_at = now()
+WHERE project_id = $1 AND assignee_id = $2
+RETURNING id
+`
+
+type UnassignTasksForDepartingProjectMemberParams struct {
+	ProjectID  pgtype.UUID `json:"project_id"`
+	AssigneeID pgtype.UUID `json:"assignee_id"`
+}
+
+func (q *Queries) UnassignTasksForDepartingProjectMember(ctx context.Context, arg UnassignTasksForDepartingProjectMemberParams) ([]pgtype.UUID, error) {
+	rows, err := q.db.Query(ctx, unassignTasksForDepartingProjectMember, arg.ProjectID, arg.AssigneeID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []pgtype.UUID
+	for rows.Next() {
+		var id pgtype.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateProject = `-- name: UpdateProject :one
+UPDATE projects
+SET
+    name = coalesce($1, name),
+    description = coalesce($2, description),
+    updated_at = now()
+WHERE id = $3 AND deleted_at IS NULL
+RETURNING id, workspace_id, key, name, description, task_counter, created_by, created_at, updated_at, deleted_at
+`
+
+type UpdateProjectParams struct {
+	Name        pgtype.Text `json:"name"`
+	Description pgtype.Text `json:"description"`
+	ID          pgtype.UUID `json:"id"`
+}
+
+func (q *Queries) UpdateProject(ctx context.Context, arg UpdateProjectParams) (Project, error) {
+	row := q.db.QueryRow(ctx, updateProject, arg.Name, arg.Description, arg.ID)
+	var i Project
+	err := row.Scan(
+		&i.ID,
+		&i.WorkspaceID,
+		&i.Key,
+		&i.Name,
+		&i.Description,
+		&i.TaskCounter,
+		&i.CreatedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
+const updateProjectMemberRole = `-- name: UpdateProjectMemberRole :one
+UPDATE project_members
+SET role = $3
+WHERE project_id = $1 AND user_id = $2
+RETURNING id, project_id, workspace_id, user_id, role, created_at
+`
+
+type UpdateProjectMemberRoleParams struct {
+	ProjectID pgtype.UUID `json:"project_id"`
+	UserID    pgtype.UUID `json:"user_id"`
+	Role      string      `json:"role"`
+}
+
+func (q *Queries) UpdateProjectMemberRole(ctx context.Context, arg UpdateProjectMemberRoleParams) (ProjectMember, error) {
+	row := q.db.QueryRow(ctx, updateProjectMemberRole, arg.ProjectID, arg.UserID, arg.Role)
+	var i ProjectMember
+	err := row.Scan(
+		&i.ID,
+		&i.ProjectID,
+		&i.WorkspaceID,
+		&i.UserID,
+		&i.Role,
+		&i.CreatedAt,
+	)
+	return i, err
 }
 
 const updateWorkspace = `-- name: UpdateWorkspace :one

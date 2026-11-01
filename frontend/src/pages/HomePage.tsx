@@ -1,4 +1,4 @@
-import { useState, type FC } from 'react';
+import { useState, useEffect, type FC } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient, ApiClientError } from '../shared/lib/api-client';
 import { config } from '../shared/lib/config';
@@ -17,6 +17,7 @@ import {
   Settings,
   LayoutDashboard,
   Plus,
+  FolderKanban,
 } from 'lucide-react';
 import { useAuth } from '../features/auth/AuthContext';
 import { useWorkspace } from '../features/workspace/WorkspaceContext';
@@ -24,6 +25,8 @@ import { WorkspaceSwitcher } from '../features/workspace/components/WorkspaceSwi
 import { WorkspaceMembersView } from '../features/workspace/components/WorkspaceMembersView';
 import { WorkspaceSettingsView } from '../features/workspace/components/WorkspaceSettingsView';
 import { CreateWorkspaceModal } from '../features/workspace/components/CreateWorkspaceModal';
+import { ProjectListView } from '../features/projects/components/ProjectListView';
+import { ProjectDetailView } from '../features/projects/components/ProjectDetailView';
 import { canUpdateWorkspace } from '../features/workspace/types';
 
 interface HealthData {
@@ -41,13 +44,19 @@ interface ReadinessData {
   environment: string;
 }
 
-type TabType = 'overview' | 'members' | 'settings';
+type TabType = 'overview' | 'projects' | 'members' | 'settings';
 
 export const HomePage: FC = () => {
   const { user, logout } = useAuth();
   const { workspaces, activeWorkspace, activeRole, isLoading: isWsLoading } = useWorkspace();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  // Reset selected project whenever active workspace changes
+  useEffect(() => {
+    setSelectedProjectId(null);
+  }, [activeWorkspace?.id]);
 
   // 1. Query Backend Liveness (/health)
   const healthQuery = useQuery<HealthData, ApiClientError>({
@@ -86,7 +95,7 @@ export const HomePage: FC = () => {
             </div>
             <div>
               <h1 className="text-lg font-bold tracking-tight">DevFlow</h1>
-              <p className="text-xs text-slate-400">Sprint 2 Phase 2 — Workspaces & RBAC</p>
+              <p className="text-xs text-slate-400">Sprint 2 Phase 3 — Workspace & Project Management</p>
             </div>
           </div>
 
@@ -142,6 +151,23 @@ export const HomePage: FC = () => {
             >
               <LayoutDashboard className="w-4 h-4" />
               <span>Overview</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedProjectId(null);
+                setActiveTab('projects');
+              }}
+              className={`py-3 px-1 border-b-2 font-medium flex items-center gap-2 transition-colors ${
+                activeTab === 'projects'
+                  ? 'border-indigo-500 text-indigo-400'
+                  : 'border-transparent text-slate-400 hover:text-slate-200'
+              }`}
+              data-testid="tab-projects"
+            >
+              <FolderKanban className="w-4 h-4" />
+              <span>Projects</span>
             </button>
 
             <button
@@ -319,16 +345,30 @@ export const HomePage: FC = () => {
               <div className="flex items-center gap-4 text-slate-400 font-mono text-[11px]">
                 <span>RBAC 4-Tier Roles</span>
                 <span>Tenant Isolation</span>
-                <span>Owner Demotion Protection</span>
+                <span>Project Boundary Isolation</span>
               </div>
             </div>
           </div>
         )}
 
-        {/* Tab 2: Members */}
+        {/* Tab 2: Projects */}
+        {activeWorkspace && activeTab === 'projects' && (
+          selectedProjectId ? (
+            <ProjectDetailView
+              projectId={selectedProjectId}
+              onBack={() => setSelectedProjectId(null)}
+            />
+          ) : (
+            <ProjectListView
+              onSelectProject={(id) => setSelectedProjectId(id)}
+            />
+          )
+        )}
+
+        {/* Tab 3: Members */}
         {activeWorkspace && activeTab === 'members' && <WorkspaceMembersView />}
 
-        {/* Tab 3: Settings */}
+        {/* Tab 4: Settings */}
         {activeWorkspace && activeTab === 'settings' && canManageSettings && <WorkspaceSettingsView />}
       </main>
 
@@ -340,7 +380,7 @@ export const HomePage: FC = () => {
 
       {/* Footer */}
       <footer className="border-t border-slate-800/60 py-4 text-center text-xs text-slate-500">
-        DevFlow — Sprint 2 Phase 2 Verified Workspace & Role-Based Access Control Engine
+        DevFlow — Sprint 2 Phase 3 Verified Multi-Tenant Workspace & Project Management Engine
       </footer>
     </div>
   );

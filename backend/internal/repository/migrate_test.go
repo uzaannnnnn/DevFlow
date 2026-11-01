@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -69,8 +70,8 @@ func TestDatabase_MigrationsAndConstraints(t *testing.T) {
 		if err != nil {
 			t.Fatalf("MigrationVersion failed: %v", err)
 		}
-		if ver < 2 || dirty {
-			t.Errorf("expected version >= 2 (clean), got version %d, dirty=%v", ver, dirty)
+		if ver < 3 || dirty {
+			t.Errorf("expected version >= 3 (clean), got version %d, dirty=%v", ver, dirty)
 		}
 	})
 
@@ -243,7 +244,7 @@ func TestDatabase_MigrationsAndConstraints(t *testing.T) {
 			t.Errorf("expected error on duplicate project key within workspace, got nil")
 		}
 
-		// E. Project Membership composite FK
+		// E. Project Membership composite FK (supports multiple members per project)
 		_, err = pool.Exec(ctx, `
 			INSERT INTO project_members (project_id, workspace_id, user_id, role)
 			VALUES ($1, $2, $3, 'owner');
@@ -252,12 +253,22 @@ func TestDatabase_MigrationsAndConstraints(t *testing.T) {
 			t.Fatalf("failed to insert project member: %v", err)
 		}
 
+		// Insert second member into project
+		_, err = pool.Exec(ctx, `
+			INSERT INTO project_members (project_id, workspace_id, user_id, role)
+			VALUES ($1, $2, $3, 'member');
+		`, projectID, workspaceID, user2ID)
+		if err != nil {
+			t.Fatalf("failed to insert second project member: %v", err)
+		}
+
 		// F. Task Check & Composite FK: Assignee must be project member
 		// Non-member assignment should fail
+		outsideUser := "00000000-0000-0000-0000-000000000099"
 		_, err = pool.Exec(ctx, `
 			INSERT INTO tasks (project_id, identifier, title, status, priority, assignee_id, created_by)
 			VALUES ($1, 'DEV-001', 'Task 1', 'todo', 'medium', $2, $3);
-		`, projectID, user2ID, userID)
+		`, projectID, outsideUser, userID)
 		if err == nil {
 			t.Errorf("expected composite FK error when assigning task to non-project-member, got nil")
 		}
@@ -300,48 +311,104 @@ func TestDatabase_MigrationsAndConstraints(t *testing.T) {
 		}
 	})
 
-	// 4. Test Migration DOWN and REAPPLICATION
-	t.Run("MigrationDownAndReapply", func(t *testing.T) {
-		// Close pool connections before dropping tables
-		pool.Close()
-
-		// Migration DOWN
-		err := RunMigrationsDown(testDBURL, migrationsPath)
-		if err != nil {
-			t.Fatalf("RunMigrationsDown failed: %v", err)
+	// 4. Test Migration 000003 Safe Rollback Behavior
+	t.Run("Migration000003SafeRollbackBehavior", func(t *testing.T) {
+		// Test A: Rollback with multiple project members MUST abort with error and preserve all data
+		err := RunMigrationSteps(testDBURL, migrationsPath, -1)
+		if err == nil {
+			t.Fatalf("expected rollback of migration 000003 to fail when multiple project members exist, got nil")
+		}
+		if !strings.Contains(err.Error(), "multi-member projects exist. Data deletion prohibited.") {
+			t.Errorf("expected error message mentioning multi-member data deletion prohibition, got: %v", err)
 		}
 
-		// Verify tables are gone
+		// Verify all project members are intact in disposable test DB (no silent data loss)
 		testDB, err := sql.Open("postgres", testDBURL)
 		if err != nil {
 			t.Fatalf("failed to connect to test db: %v", err)
 		}
 		defer testDB.Close()
 
-		var count int
+		var memberCount int
+		err = testDB.QueryRow(`SELECT count(*) FROM project_members;`).Scan(&memberCount)
+		if err != nil {
+			t.Fatalf("failed to query project members count: %v", err)
+		}
+		if memberCount < 2 {
+			t.Fatalf("DATA LOSS DETECTED: expected at least 2 project members intact after failed rollback, found: %d", memberCount)
+		}
+
+		// Test B: Clear dirty state resulting from aborted migration
+		err = ForceMigrationVersion(testDBURL, migrationsPath, 3)
+		if err != nil {
+			t.Fatalf("failed to force migration version 3: %v", err)
+		}
+
+		// Remove the second member so data is compatible with single-member legacy constraint
+		_, err = testDB.Exec(`DELETE FROM project_members WHERE role = 'member';`)
+		if err != nil {
+			t.Fatalf("failed to clean up member for compatible rollback: %v", err)
+		}
+
+		// Rollback on compatible data (at most 1 member per project) must now succeed
+		err = RunMigrationSteps(testDBURL, migrationsPath, -1)
+		if err != nil {
+			t.Fatalf("expected rollback to succeed on compatible data, got: %v", err)
+		}
+
+		// Verify version is 2 and clean
+		ver, dirty, err := MigrationVersion(testDBURL, migrationsPath)
+		if err != nil {
+			t.Fatalf("failed to get migration version: %v", err)
+		}
+		if ver != 2 || dirty {
+			t.Errorf("expected version 2 clean after rollback, got version %d, dirty=%v", ver, dirty)
+		}
+
+		// Verify legacy UNIQUE index project_members_project_workspace_key exists on version 2
+		var uniqueIndexExists bool
+		err = testDB.QueryRow(`
+			SELECT EXISTS (
+				SELECT 1 FROM pg_indexes
+				WHERE tablename = 'project_members'
+				  AND indexname = 'project_members_project_workspace_key'
+			);
+		`).Scan(&uniqueIndexExists)
+		if err != nil || !uniqueIndexExists {
+			t.Errorf("expected legacy unique index project_members_project_workspace_key to be restored after rollback: %v", err)
+		}
+
+		// Clean down to 0
+		err = RunMigrationsDown(testDBURL, migrationsPath)
+		if err != nil {
+			t.Fatalf("RunMigrationsDown failed: %v", err)
+		}
+
+		// Verify tables are gone
+		var tableCount int
 		err = testDB.QueryRow(`
 			SELECT count(*) FROM information_schema.tables 
 			WHERE table_schema = 'public' AND table_type = 'BASE TABLE' AND table_name != 'schema_migrations';
-		`).Scan(&count)
+		`).Scan(&tableCount)
 		if err != nil {
 			t.Fatalf("failed to query remaining tables: %v", err)
 		}
-		if count != 0 {
-			t.Errorf("expected 0 application tables after migration down, got %d", count)
+		if tableCount != 0 {
+			t.Errorf("expected 0 application tables after migration down, got %d", tableCount)
 		}
 
-		// Migration REAPPLICATION UP
+		// Reapply all migrations UP to >= 3 clean
 		err = RunMigrationsUp(testDBURL, migrationsPath)
 		if err != nil {
 			t.Fatalf("RunMigrationsUp (reapply) failed: %v", err)
 		}
 
-		ver, dirty, err := MigrationVersion(testDBURL, migrationsPath)
+		ver, dirty, err = MigrationVersion(testDBURL, migrationsPath)
 		if err != nil {
 			t.Fatalf("MigrationVersion failed: %v", err)
 		}
-		if ver < 2 || dirty {
-			t.Errorf("expected version >= 2 clean after reapply, got %d, dirty=%v", ver, dirty)
+		if ver < 3 || dirty {
+			t.Errorf("expected version >= 3 clean after reapply, got %d, dirty=%v", ver, dirty)
 		}
 	})
 }

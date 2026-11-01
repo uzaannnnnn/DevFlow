@@ -172,6 +172,13 @@ DevFlow enforces a strict distinction between **APPROVED architectural decisions
 - **B:** Derives prefix from workspace; less flexible if workspace is renamed. No additional column.
 - **C:** Simpler but less readable; loses project context in identifier.
 
+### Project Key Specification & Lifecycle Invariants
+
+1. **Format Validation:** Strictly validated against the regular expression `^[A-Z][A-Z0-9]{1,9}$` (2 to 10 uppercase alphanumeric characters, beginning with an uppercase ASCII letter).
+2. **Auto-Generation Algorithm:** When omitted during project creation, auto-generated from the project name by taking the initials of uppercase words or extracting the first alphanumeric characters (prepends 'P' if the first character is numeric, clamped to between 2 and 10 characters).
+3. **Workspace-Scoped Uniqueness:** Enforced via composite constraint `UNIQUE(workspace_id, key)`. Two distinct workspaces may utilize the same project key. Within the same workspace, attempting to create a project with an existing key returns HTTP 409 Conflict (`code: 'CONFLICT'`).
+4. **Permanent Immutability:** The project key cannot be modified by `UPDATE /api/v1/projects/{id}` or any other endpoint after initial creation. This ensures persistent references across Git branches, commits, PR discussions, and audit logs.
+
 ### Security Implications
 
 - None significant. Identifier prefix is a public label.

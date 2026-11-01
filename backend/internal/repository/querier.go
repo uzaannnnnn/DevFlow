@@ -12,23 +12,37 @@ import (
 
 type Querier interface {
 	// ============================================================================
+	// Project Members Queries
+	// ============================================================================
+	AddProjectMember(ctx context.Context, arg AddProjectMemberParams) (ProjectMember, error)
+	// ============================================================================
 	// Workspace Members Queries
 	// ============================================================================
 	AddWorkspaceMember(ctx context.Context, arg AddWorkspaceMemberParams) (WorkspaceMember, error)
+	CountProjectOwners(ctx context.Context, projectID pgtype.UUID) (int64, error)
 	CountWorkspaceOwners(ctx context.Context, workspaceID pgtype.UUID) (int64, error)
+	// ============================================================================
+	// Project Queries
+	// ============================================================================
+	CreateProject(ctx context.Context, arg CreateProjectParams) (Project, error)
 	CreateRefreshSession(ctx context.Context, arg CreateRefreshSessionParams) (RefreshSession, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	// ============================================================================
 	// Workspace Queries
 	// ============================================================================
 	CreateWorkspace(ctx context.Context, arg CreateWorkspaceParams) (Workspace, error)
+	DeleteProjectMember(ctx context.Context, arg DeleteProjectMemberParams) (ProjectMember, error)
 	DeleteWorkspaceMember(ctx context.Context, arg DeleteWorkspaceMemberParams) (WorkspaceMember, error)
-	// ============================================================================
-	// Project and Task Basic Stubs
-	// ============================================================================
 	GetProjectByID(ctx context.Context, id pgtype.UUID) (Project, error)
+	GetProjectByIDForUpdate(ctx context.Context, id pgtype.UUID) (Project, error)
+	GetProjectByWorkspaceAndKey(ctx context.Context, arg GetProjectByWorkspaceAndKeyParams) (Project, error)
+	GetProjectMember(ctx context.Context, arg GetProjectMemberParams) (ProjectMember, error)
+	GetProjectMemberForUpdate(ctx context.Context, arg GetProjectMemberForUpdateParams) (ProjectMember, error)
 	GetRefreshSessionByTokenHash(ctx context.Context, tokenHash string) (RefreshSession, error)
 	GetRefreshSessionByTokenHashForUpdate(ctx context.Context, tokenHash string) (RefreshSession, error)
+	// ============================================================================
+	// Task Basic Stubs
+	// ============================================================================
 	GetTaskByID(ctx context.Context, id pgtype.UUID) (Task, error)
 	GetUserByEmail(ctx context.Context, lower string) (User, error)
 	GetUserByID(ctx context.Context, id pgtype.UUID) (User, error)
@@ -39,16 +53,24 @@ type Querier interface {
 	GetWorkspaceMemberForUpdate(ctx context.Context, arg GetWorkspaceMemberForUpdateParams) (WorkspaceMember, error)
 	GetWorkspaceMembersForUpdateDeterministic(ctx context.Context, arg GetWorkspaceMembersForUpdateDeterministicParams) ([]GetWorkspaceMembersForUpdateDeterministicRow, error)
 	ListActiveUserRefreshSessions(ctx context.Context, userID pgtype.UUID) ([]RefreshSession, error)
+	ListProjectMembers(ctx context.Context, projectID pgtype.UUID) ([]ListProjectMembersRow, error)
+	ListProjectsByWorkspaceAndUser(ctx context.Context, arg ListProjectsByWorkspaceAndUserParams) ([]ListProjectsByWorkspaceAndUserRow, error)
 	ListWorkspaceMembers(ctx context.Context, workspaceID pgtype.UUID) ([]ListWorkspaceMembersRow, error)
 	ListWorkspacesByUserID(ctx context.Context, userID pgtype.UUID) ([]ListWorkspacesByUserIDRow, error)
+	LockTasksForDepartingProjectMember(ctx context.Context, arg LockTasksForDepartingProjectMemberParams) ([]pgtype.UUID, error)
 	// Foundational database queries for DevFlow
 	// Used by sqlc to generate type-safe models and Querier interface.
 	Ping(ctx context.Context) (int32, error)
 	RevokeAllUserRefreshSessions(ctx context.Context, userID pgtype.UUID) error
 	RevokeRefreshSessionByID(ctx context.Context, arg RevokeRefreshSessionByIDParams) (RefreshSession, error)
 	RevokeRefreshSessionByTokenHash(ctx context.Context, tokenHash string) (RefreshSession, error)
+	SoftDeleteProject(ctx context.Context, id pgtype.UUID) (Project, error)
 	SoftDeleteWorkspace(ctx context.Context, id pgtype.UUID) (Workspace, error)
+	UnassignTasksAndLogForDepartingMember(ctx context.Context, arg UnassignTasksAndLogForDepartingMemberParams) ([]pgtype.UUID, error)
 	UnassignTasksForDepartingMember(ctx context.Context, arg UnassignTasksForDepartingMemberParams) ([]UnassignTasksForDepartingMemberRow, error)
+	UnassignTasksForDepartingProjectMember(ctx context.Context, arg UnassignTasksForDepartingProjectMemberParams) ([]pgtype.UUID, error)
+	UpdateProject(ctx context.Context, arg UpdateProjectParams) (Project, error)
+	UpdateProjectMemberRole(ctx context.Context, arg UpdateProjectMemberRoleParams) (ProjectMember, error)
 	UpdateWorkspace(ctx context.Context, arg UpdateWorkspaceParams) (Workspace, error)
 	UpdateWorkspaceMemberRole(ctx context.Context, arg UpdateWorkspaceMemberRoleParams) (WorkspaceMember, error)
 	UpdateWorkspaceOwner(ctx context.Context, arg UpdateWorkspaceOwnerParams) (Workspace, error)

@@ -63,6 +63,9 @@ func SetupRouter(cfg *config.Config, pool ...*pgxpool.Pool) *gin.Engine {
 	workspaceUsecase := usecases.NewWorkspaceUsecase(p, queries)
 	workspaceHandler := NewWorkspaceHandler(workspaceUsecase)
 
+	projectUsecase := usecases.NewProjectUsecase(p, queries)
+	projectHandler := NewProjectHandler(projectUsecase)
+
 	// API v1 route group
 	v1 := r.Group("/api/v1")
 	{
@@ -102,6 +105,24 @@ func SetupRouter(cfg *config.Config, pool ...*pgxpool.Pool) *gin.Engine {
 				workspaces.POST("/:id/members", workspaceHandler.AddMember)
 				workspaces.PATCH("/:id/members/:userId", workspaceHandler.UpdateMemberRole)
 				workspaces.DELETE("/:id/members/:userId", workspaceHandler.RemoveMember)
+
+				// Projects in Workspace (P1 & P2)
+				workspaces.GET("/:id/projects", projectHandler.List)
+				workspaces.POST("/:id/projects", projectHandler.Create)
+			}
+
+			// Projects (P3 - P8)
+			projects := protected.Group("/projects")
+			{
+				projects.GET("/:id", projectHandler.Get)
+				projects.PATCH("/:id", projectHandler.Update)
+				projects.DELETE("/:id", projectHandler.Archive)
+
+				// Project Members
+				projects.GET("/:id/members", projectHandler.ListMembers)
+				projects.POST("/:id/members", projectHandler.AddMember)
+				projects.PATCH("/:id/members/:userId", projectHandler.UpdateMemberRole)
+				projects.DELETE("/:id/members/:userId", projectHandler.RemoveMember)
 			}
 		}
 	}

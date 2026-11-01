@@ -40,6 +40,36 @@ func RunMigrationsDown(databaseURL, migrationsPath string) error {
 	return nil
 }
 
+// RunMigrationSteps executes n migration steps up (n > 0) or down (n < 0).
+func RunMigrationSteps(databaseURL, migrationsPath string, steps int) error {
+	m, err := newMigrator(databaseURL, migrationsPath)
+	if err != nil {
+		return err
+	}
+	defer m.Close()
+
+	if err := m.Steps(steps); err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		return fmt.Errorf("failed to execute migration steps (%d): %w", steps, err)
+	}
+
+	return nil
+}
+
+// ForceMigrationVersion sets the current migration version and clears the dirty flag.
+func ForceMigrationVersion(databaseURL, migrationsPath string, version int) error {
+	m, err := newMigrator(databaseURL, migrationsPath)
+	if err != nil {
+		return err
+	}
+	defer m.Close()
+
+	if err := m.Force(version); err != nil {
+		return fmt.Errorf("failed to force migration version (%d): %w", version, err)
+	}
+
+	return nil
+}
+
 // MigrationVersion returns the current migration version and dirty status.
 func MigrationVersion(databaseURL, migrationsPath string) (uint, bool, error) {
 	m, err := newMigrator(databaseURL, migrationsPath)

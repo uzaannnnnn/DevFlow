@@ -207,12 +207,159 @@ WHERE t.project_id = p.id
 RETURNING t.id, t.project_id;
 
 -- ============================================================================
--- Project and Task Basic Stubs
+-- Project Queries
 -- ============================================================================
+
+-- name: CreateProject :one
+INSERT INTO projects (
+    workspace_id,
+    key,
+    name,
+    description,
+    task_counter,
+    created_by
+) VALUES (
+    $1, $2, $3, $4, 0, $5
+)
+RETURNING *;
 
 -- name: GetProjectByID :one
 SELECT * FROM projects
 WHERE id = $1 AND deleted_at IS NULL LIMIT 1;
+
+-- name: GetProjectByIDForUpdate :one
+SELECT * FROM projects
+WHERE id = $1 AND deleted_at IS NULL
+FOR UPDATE LIMIT 1;
+
+-- name: GetProjectByWorkspaceAndKey :one
+SELECT * FROM projects
+WHERE workspace_id = $1 AND lower(key) = lower($2) AND deleted_at IS NULL LIMIT 1;
+
+-- name: ListProjectsByWorkspaceAndUser :many
+SELECT
+    p.id,
+    p.workspace_id,
+    p.key,
+    p.name,
+    p.description,
+    p.task_counter,
+    p.created_by,
+    p.created_at,
+    p.updated_at,
+    p.deleted_at,
+    pm.role as member_role,
+    (SELECT count(*) FROM project_members pm2 WHERE pm2.project_id = p.id) as member_count
+FROM projects p
+JOIN project_members pm ON p.id = pm.project_id
+WHERE p.workspace_id = $1
+  AND pm.user_id = $2
+  AND p.deleted_at IS NULL
+  AND (
+      sqlc.narg('search')::text IS NULL OR
+      p.name ILIKE '%' || sqlc.narg('search')::text || '%' OR
+      p.key ILIKE '%' || sqlc.narg('search')::text || '%'
+  )
+ORDER BY p.created_at DESC;
+
+-- name: UpdateProject :one
+UPDATE projects
+SET
+    name = coalesce(sqlc.narg('name'), name),
+    description = coalesce(sqlc.narg('description'), description),
+    updated_at = now()
+WHERE id = sqlc.arg('id') AND deleted_at IS NULL
+RETURNING *;
+
+-- name: SoftDeleteProject :one
+UPDATE projects
+SET deleted_at = now(), updated_at = now()
+WHERE id = $1 AND deleted_at IS NULL
+RETURNING *;
+
+-- ============================================================================
+-- Project Members Queries
+-- ============================================================================
+
+-- name: AddProjectMember :one
+INSERT INTO project_members (
+    project_id,
+    workspace_id,
+    user_id,
+    role
+) VALUES (
+    $1, $2, $3, $4
+)
+RETURNING *;
+
+-- name: GetProjectMember :one
+SELECT * FROM project_members
+WHERE project_id = $1 AND user_id = $2 LIMIT 1;
+
+-- name: GetProjectMemberForUpdate :one
+SELECT * FROM project_members
+WHERE project_id = $1 AND user_id = $2
+FOR UPDATE LIMIT 1;
+
+-- name: ListProjectMembers :many
+SELECT
+    pm.id,
+    pm.project_id,
+    pm.workspace_id,
+    pm.user_id,
+    pm.role,
+    pm.created_at,
+    u.email,
+    u.name as user_name,
+    u.avatar_url
+FROM project_members pm
+JOIN users u ON pm.user_id = u.id
+WHERE pm.project_id = $1
+ORDER BY pm.created_at ASC;
+
+-- name: UpdateProjectMemberRole :one
+UPDATE project_members
+SET role = $3
+WHERE project_id = $1 AND user_id = $2
+RETURNING *;
+
+-- name: DeleteProjectMember :one
+DELETE FROM project_members
+WHERE project_id = $1 AND user_id = $2
+RETURNING *;
+
+-- name: CountProjectOwners :one
+SELECT count(*) FROM project_members
+WHERE project_id = $1 AND role = 'owner';
+
+-- name: UnassignTasksForDepartingProjectMember :many
+UPDATE tasks
+SET assignee_id = NULL, updated_at = now()
+WHERE project_id = $1 AND assignee_id = $2
+RETURNING id;
+
+-- name: LockTasksForDepartingProjectMember :many
+SELECT id FROM tasks
+WHERE project_id = $1 AND assignee_id = $2
+ORDER BY id
+FOR UPDATE;
+
+-- name: UnassignTasksAndLogForDepartingMember :many
+WITH unassigned_tasks AS (
+    UPDATE tasks
+    SET assignee_id = NULL, updated_at = now()
+    WHERE tasks.project_id = sqlc.arg(project_id) AND tasks.assignee_id = sqlc.arg(assignee_id)::uuid
+    RETURNING id, tasks.project_id
+)
+INSERT INTO activity_logs (id, project_id, task_id, actor_id, action, metadata, created_at)
+SELECT gen_random_uuid(), u.project_id, u.id, sqlc.arg(actor_id), 'task_unassigned',
+       jsonb_build_object('unassigned_user_id', sqlc.arg(assignee_id)::text), now()
+FROM unassigned_tasks u
+RETURNING task_id;
+
+-- ============================================================================
+-- Task Basic Stubs
+-- ============================================================================
 
 -- name: GetTaskByID :one
 SELECT * FROM tasks
